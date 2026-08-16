@@ -10,6 +10,8 @@ Assinado: jairbpv - 16/08/2026
 import hashlib
 import json
 from datetime import datetime
+from fastapi import FastAPI, UploadFile, File
+from fastapi.responses import HTMLResponse
 
 MANIFESTO = {
     "titulo": "ECO CONTRA O EXTRAÍSMO",
