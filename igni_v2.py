@@ -56,10 +56,23 @@ def home():
 
 @app.post("/processar")
 async def processar(file: UploadFile = File(...)):
+     "hash": h, "manifesto": MANIFESTO}
+@app.get("/processar", response_class=HTMLResponse)
+def formulario():
+    return """
+    <h1>ECO IGNI-15: REGISTRE O MANIFESTO</h1>
+    <form action="/processar" enctype="multipart/form-data" method="post">
+        <input name="file" type="file">
+        <input type="submit" value="Enviar para o Limiar">
+    </form>
+    """
+
+@app.post("/processar")
+async def processar(file: UploadFile = File(...)):
     content = await file.read()
     h = gerar_hash(content)
-    return {"status": "ECO REGISTRADO", "hash": h, "manifesto": MANIFESTO}
-
+    igini_boot()
+    return {"status": "ECO REGISTRADO NO LIMIAR", "hash_sha256": h, "manifesto_ativo": MANIFESTO}
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
