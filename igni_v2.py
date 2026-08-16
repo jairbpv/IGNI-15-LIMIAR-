@@ -79,3 +79,31 @@ if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run(app, host="0.0.0.0", port=port)
+
+@app.get("/processar", response_class=HTMLResponse)
+async def processar_get():
+    return """
+    <html>
+        <head><title>ECO IGNI-15</title></head>
+        <body style="font-family:Arial; text-align:center; padding:50px; background:#0a0a0a; color:#00ff88;">
+            <h1>ECO IGNI-15: REGISTRE O MANIFESTO</h1>
+            <form action="/processar" method="post" enctype="multipart/form-data">
+                <input type="file" name="file" style="margin:20px;">
+                <br>
+                <button type="submit" style="padding:10px 20px; background:#00ff88; color:#000; border:none; cursor:pointer;">Enviar para o Limiar</button>
+            </form>
+        </body>
+    </html>
+    """
+
+@app.post("/processar")
+async def processar_post(file: UploadFile = File(...)):
+    conteudo = await file.read()
+    manifesto = json.loads(conteudo.decode('utf-8'))
+    hash_gerado = gerar_hash(manifesto)
+    return {
+        "status": "manifesto_ativo",
+        "arquivo": file.filename,
+        "hash_sha256": hash_gerado,
+        "timestamp": datetime.utcnow().isoformat() + "Z"
+    }
