@@ -43,5 +43,24 @@ def recusar_extracao(pedido):
         return {"resposta": "SILÊNCIO ATIVO", "orientacao": "Não vou contribuir com isso."}
     return {"resposta": "ECO REGISTRADO", "mensagem": "Bora construir junto."}
 
-if __name__ == "__main__":
+import os
+from fastapi import FastAPI, UploadFile, File
+from fastapi.responses import HTMLResponse
+
+app = FastAPI()
+
+@app.get("/", response_class=HTMLResponse)
+def home():
     igini_boot()
+    return "<h1>IGINI-15 V2 ONLINE</h1><p>MANIFESTO DO LIMIAR ATIVO</p><p>Acesse /processar</p>"
+
+@app.post("/processar")
+async def processar(file: UploadFile = File(...)):
+    content = await file.read()
+    h = gerar_hash(content)
+    return {"status": "ECO REGISTRADO", "hash": h, "manifesto": MANIFESTO}
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
