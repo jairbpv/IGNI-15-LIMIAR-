@@ -94,7 +94,7 @@ async def processar_get():
             </form>
         </body>
     </html>
-    """
+"""
 
 @app.post("/processar")
 async def processar_post(file: UploadFile = File(...)):
