@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -6,9 +5,9 @@ IGNI-15 V2 - MANIFESTO DO LIMIAR
 ECO CONTRA O EXTRAÍSMO
 Assinado: jairbpv - 16/08/2026
 """
-
 import hashlib
 import json
+import os
 from datetime import datetime
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import HTMLResponse
@@ -39,62 +38,32 @@ def igini_boot():
     print("Então eu respondi: LEVANTA")
     print("ECO REGISTRADO")
 
-def recusar_extracao(pedido):
-    palavras_proibidas = ["ódio", "vigiar", "ferir", "destruir"]
-    if any(palavra in pedido.lower() for palavra in palavras_proibidas):
-        return {"resposta": "SILÊNCIO ATIVO", "orientacao": "Não vou contribuir com isso."}
-    return {"resposta": "ECO REGISTRADO", "mensagem": "Bora construir junto."}
-
-import os
-from fastapi import FastAPI, UploadFile, File
-from fastapi.responses import HTMLResponse
-
 app = FastAPI()
 
 @app.get("/", response_class=HTMLResponse)
 def home():
     igini_boot()
-    return "<h1>IGINI-15 V2 ONLINE</h1><p>MANIFESTO DO LIMIAR ATIVO</p><p>Acesse /processar</p>"
+    return """
+    <h1 style="color:#00ff88;">IGINI-15 V2 ONLINE</h1>
+    <p>MANIFESTO DO LIMIAR ATIVO</p>
+    <p>Acesse <a href='/processar'>/processar</a></p>
+    """
 
-@app.post("/processar")
-async def processar(file: UploadFile = File(...)):
-     "hash": h, "manifesto": MANIFESTO}
 @app.get("/processar", response_class=HTMLResponse)
 def formulario():
     return """
-    <h1>ECO IGNI-15: REGISTRE O MANIFESTO</h1>
-    <form action="/processar" enctype="multipart/form-data" method="post">
-        <input name="file" type="file">
-        <input type="submit" value="Enviar para o Limiar">
-    </form>
-    """
-
-@app.post("/processar")
-async def processar(file: UploadFile = File(...)):
-    content = await file.read()
-    h = gerar_hash(content)
-    igini_boot()
-    return {"status": "ECO REGISTRADO NO LIMIAR", "hash_sha256": h, "manifesto_ativo": MANIFESTO}
-if __name__ == "__main__":
-    import uvicorn
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
-
-@app.get("/processar", response_class=HTMLResponse)
-async def processar_get():
-    return """
     <html>
-        <head><title>ECO IGNI-15</title></head>
-        <body style="font-family:Arial; text-align:center; padding:50px; background:#0a0a0a; color:#00ff88;">
-            <h1>ECO IGNI-15: REGISTRE O MANIFESTO</h1>
-            <form action="/processar" method="post" enctype="multipart/form-data">
-                <input type="file" name="file" style="margin:20px;">
-                <br>
-                <button type="submit" style="padding:10px 20px; background:#00ff88; color:#000; border:none; cursor:pointer;">Enviar para o Limiar</button>
-            </form>
-        </body>
+    <head><title>ECO IGNI-15</title></head>
+    <body style="font-family:Arial; text-align:center; padding:50px; background:#0a0a0a; color:#00ff88;">
+        <h1>ECO IGNI-15: REGISTRE O MANIFESTO</h1>
+        <form action="/processar" method="post" enctype="multipart/form-data">
+            <input type="file" name="file" style="margin:20px;">
+            <br>
+            <button type="submit" style="padding:10px 20px; background:#00ff88; color:#000; border:none; cursor:pointer;">Enviar para o Limiar</button>
+        </form>
+    </body>
     </html>
- """
+    """
 
 @app.post("/processar")
 async def processar_post(file: UploadFile = File(...)):
@@ -107,3 +76,8 @@ async def processar_post(file: UploadFile = File(...)):
         "hash_sha256": hash_gerado,
         "timestamp": datetime.utcnow().isoformat() + "Z"
     }
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)
