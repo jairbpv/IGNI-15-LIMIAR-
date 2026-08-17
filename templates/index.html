@@ -1,58 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>IGNI-15 V9.5.9 - Interface do Limiar</title>
+    <title>IGNI-15 V9.5.9 - INTERFACE DO LIMIAR</title>
     <style>
-        body { font-family: Arial; background: #0a0a0a; color: #00ff00; padding: 20px; text-align: center; }
-        input, button { padding: 10px; margin: 5px; background: #1a1a1a; color: #00ff00; border: 1px solid #00ff00; width: 250px; }
-        button { cursor: pointer; width: 150px; }
-        #chain { background: #111; padding: 10px; margin-top: 20px; text-align: left; color: #00ff00; }
+        body { background: #000; color: #00ff00; font-family: monospace; padding: 20px; text-align: center; }
+        input, button { padding: 10px; margin: 5px; background: #111; color: #00ff00; border: 1px solid #00ff00; width: 250px; }
+        button { cursor: pointer; width: 200px; }
     </style>
 </head>
 <body>
-    <h1>IGNI-15 V9.5.9</h1>
-    <h2>INTERFACE DO LIMIAR</h2>
+    <h1>IGNI-15 V9.5.9 - INTERFACE DO LIMIAR</h1>
     
     <h3>Criar Transação</h3>
-    <input id="sender" placeholder="Sender"><br>
-    <input id="recipient" placeholder="Recipient"><br>
-    <input id="amount" placeholder="Amount" type="number"><br>
-    <button onclick="sendTransaction()">Enviar Transação</button>
-    <hr>
-    <button onclick="mine()">MINERAR</button>
-    <button onclick="getChain()">VER CHAIN</button>
-    <button onclick="verifyChain()">VERIFICAR CHAIN</button>
+    <form action="/transaction" method="POST">
+        <input type="text" name="sender" placeholder="Sender" required><br>
+        <input type="text" name="recipient" placeholder="Recipient" required><br>
+        <input type="number" name="amount" placeholder="Amount" step="any" required><br>
+        <button type="submit">Enviar Transação</button>
+    </form>
     
-    <div id="result"></div>
-    <div id="chain"></div>
-
-<script>
-function sendTransaction() {
-    fetch('/transactions/new', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-            sender: document.getElementById('sender').value,
-            recipient: document.getElementById('recipient').value,
-            amount: document.getElementById('amount').value
-        })
-    }).then(r => r.json()).then(d => alert(d.message));
-}
-function mine() {
-    fetch('/mine').then(r => r.json()).then(d => {
-        document.getElementById('result').innerHTML = '<h3>BLOCO MINERADO!</h3><p>Hash: ' + d.hash + '</p>';
-    });
-}
-function getChain() {
-    fetch('/chain').then(r => r.json()).then(d => {
-        document.getElementById('chain').innerHTML = '<pre>' + JSON.stringify(d.chain, null, 2) + '</pre>';
-    });
-}
-function verifyChain() {
-    fetch('/verify').then(r => r.json()).then(d => {
-        alert(d.valid ? 'CHAIN VÁLIDA' : 'CHAIN INVÁLIDA');
-    });
-}
-</script>
+    <br>
+    <form action="/mine" method="GET"><button>MINERAR</button></form>
+    <form action="/chain" method="GET"><button>VER CHAIN</button></form>
+    <form action="/valid" method="GET"><button>VERIFICAR CHAIN</button></form>
 </body>
 </html>
