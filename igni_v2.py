@@ -1,6 +1,14 @@
-@app.route('/transaction', methods=['POST'])
-def new_transaction():
-    values = request.form  # <- agora pega do formulário
-    index = blockchain.new_transaction(values['sender'], values['recipient'], values['amount'])
-    response = {'message': f'Transação será adicionada ao Bloco {index}'}
-    return jsonify(response), 201
+@app.route('/mine', methods=['GET'])
+def mine():
+    last_block = blockchain.last_block
+    proof = 123
+    previous_hash = blockchain.hash(last_block)
+    block = blockchain.new_block(proof, previous_hash)
+    response = {
+        'message': "BLOCO MINERADO!",
+        'index': block['index'],
+        'transactions': block['transactions'],
+        'proof': block['proof'],
+        'previous_hash': block['previous_hash']
+    }
+    return jsonify(response), 200
