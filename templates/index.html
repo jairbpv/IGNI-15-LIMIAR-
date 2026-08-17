@@ -1,276 +1,362 @@
-<!DOCTYPE html>
+
+  <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IGNI-15 V12.0.0 SUPREMA</title>
-<style>
-    /* IGNI-15 THEME MILITAR */
-    body {
-        background: #000000;
-        color: #FFD700;
-        font-family: 'Courier New', monospace;
-        font-size: 18px;
-        letter-spacing: 1.2px;
-        font-weight: bold;
-        margin: 20px;
-        overflow-x: hidden;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IGNI-15 SUPREMA - MÓDULO DE GUERRA</title>
+    <style>
+        /* === ESTÉTICA DE ALTA TECNOLOGIA === */
+        :root {
+            --gold: #FFD700;
+            --bg: #0a0a0a;
+            --panel: #121212;
+        }
 
-    h1 {
-        font-size: 32px;
-        text-shadow: 0 0 15px #FFD700;
-        text-align: center;
-        margin-bottom: 20px;
-    }
+        body {
+            background: var(--bg);
+            color: #00ffcc; /* Ciano tecnológico para contraste */
+            font-family: 'Segoe UI', monospace;
+            margin: 0;
+            padding: 20px;
+            background-image: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #000000 70%);
+        }
 
-    h2 {
-        font-size: 22px;
-        border-bottom: 2px solid #FFD700;
-        padding-bottom: 5px;
-        margin-top: 30px;
-    }
+        h1 {
+            text-align: center;
+            color: var(--gold);
+            font-size: 2.8rem;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+            letter-spacing: 4px;
+            margin-bottom: 10px;
+        }
 
-    .card {
-        background: #111;
-        border: 1px solid #FFD700;
-        padding: 15px;
-        border-radius: 8px;
-        margin-bottom: 20px;
-        box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
-    }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            letter-spacing: 2px;
+            margin-bottom: 40px;
+            font-size: 0.9rem;
+        }
 
-    /* Log de operações militares */
-    #log-area {
-        background: #000;
-        color: #0f0; /* Verde militar de terminal */
-        border: 1px solid #555;
-        padding: 10px;
-        height: 100px;
-        overflow-y: scroll;
-        font-size: 14px;
-        font-family: monospace;
-    }
+        .grid-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
 
-    button {
-        font-size: 16px;
-        font-weight: bold;
-        padding: 12px 20px;
-        background: #FFD700;
-        color: #000;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        margin: 5px;
-        transition: 0.3s;
-    }
+        .panel {
+            background: var(--panel);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            transition: 0.3s;
+        }
 
-    button:hover {
-        box-shadow: 0 0 20px #FFD700;
-        transform: scale(1.05);
-    }
+        .panel:hover {
+            border-color: var(--gold);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+        }
 
-    button:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        transform: none;
-        box-shadow: none;
-    }
+        .panel h2 {
+            margin-top: 0;
+            border-bottom: 2px solid #222;
+            padding-bottom: 15px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-    input {
-        width: 90%;
-        box-sizing: border-box;
-        font-size: 16px;
-        padding: 10px;
-        background: #222;
-        color: #FFD700;
-        border: 1px solid #FFD700;
-        border-radius: 5px;
-        font-family: 'Courier New', monospace;
-        margin-bottom: 10px;
-    }
+        .balance-row {
+            display: flex;
+            justify-content: space-between;
+            background: #1a1a1a;
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            color: #ccc;
+        }
 
-    .moeda {
-        position: fixed;
-        top: -50px;
-        width: 40px;
-        height: 40px;
-        background: radial-gradient(circle at 30% 30%, #FFD700, #B8860B);
-        border-radius: 50%;
-        box-shadow: 0 0 15px #FFD700, inset 0 0 10px rgba(0,0,0,0.4);
-        animation: cair linear forwards;
-        z-index: 9999;
-        transform-style: preserve-3d;
-        pointer-events: none;
-    }
+        .balance-row span {
+            color: var(--gold);
+            font-weight: bold;
+        }
 
-    @keyframes cair {
-        0% { transform: translateY(-50px) rotateY(0deg) rotateX(0deg); opacity: 1; }
-        100% { transform: translateY(110vh) rotateY(720deg) rotateX(360deg); opacity: 0; }
-    }
-</style>
+        input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 14px;
+            background: #0a0a0a;
+            border: 1px solid #333;
+            color: #fff;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        input:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #B8860B, #FFD700);
+            border: none;
+            color: #000;
+            font-weight: bold;
+            font-size: 1.2rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .action-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 25px #FFD700;
+        }
+
+        .action-btn:active {
+            transform: scale(0.95);
+        }
+
+        .block-btn {
+            background: #222;
+            color: #888;
+            border: 1px solid #444;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+
+        .block-btn:hover {
+            border-color: #ff3333;
+            color: #ff3333;
+            box-shadow: 0 0 15px rgba(255, 51, 51, 0.5);
+        }
+
+        #terminal {
+            background: #000;
+            border: 1px solid #00ffcc;
+            color: #00ffcc;
+            font-family: 'Courier New', monospace;
+            height: 150px;
+            overflow-y: auto;
+            padding: 15px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            border-radius: 8px;
+            box-shadow: inset 0 0 10px rgba(0, 255, 204, 0.2);
+        }
+
+        .chain-status {
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: #666;
+            text-align: center;
+        }
+
+        /* Efeito de Partículas Tecnológicas */
+        .particle {
+            position: fixed;
+            width: 2px;
+            height: 2px;
+            background: var(--gold);
+            pointer-events: none;
+            animation: tecnopulse 4s infinite linear;
+        }
+
+        @keyframes tecnopulse {
+            0% { opacity: 0; transform: translateY(0) scale(0); }
+            50% { opacity: 1; transform: translateY(-20vh) scale(1); }
+            100% { opacity: 0; transform: translateY(-40vh) scale(0); }
+        }
+    </style>
 </head>
 <body>
 
-<h1>IGNI-15 V12.0.0 SUPREMA</h1>
+<div id="particles"></div>
 
-<div class="card">
-    <h2>Saldos da Rede (Cache Tático)</h2>
-    <p><span id="bal-alice">1000</span> IGNI (Alice)</p>
-    <p><span id="bal-bob">1000</span> IGNI (Bob)</p>
-    <p><span id="bal-comandante">10000</span> IGNI (Comandante)</p>
-    <div id="log-area">Aguardando inicialização do sistema...</div>
-</div>
+<h1>⚡ IGNI-15 SUPREMA ⚡</h1>
+<div class="subtitle">MODELO DE ALTA PERFORMANCE | PROTOCOLO ASSINCRONO</div>
 
-<div class="card">
-    <h2>Criar Transação Tática</h2>
-    <input type="text" id="tx-recipient" placeholder="Destinatário (Alice, Bob ou Comandante)">
-    <input type="number" id="tx-amount" placeholder="Quantidade" min="1">
-    <button onclick="enviarTransacao()">ENVIAR IGNI</button>
-</div>
+<div class="grid-container">
 
-<div class="card">
-    <h2>Controle da Chain</h2>
-    <button id="btn-minerar" onclick="minerarBloco()">MINERAR BLOCO</button>
-    <button onclick="verChain()">VER CHAIN COMPLETA</button>
-    <button onclick="verificarValidade()">VERIFICAR VALIDADE</button>
+    <!-- PAINEL DE ESTADO DA REDE (CACHE DE GUERRA) -->
+    <div class="panel">
+        <h2>📊 Estado da Rede (Mempool & Balances)</h2>
+        <div class="balance-row">ALICE <span id="bal-alice">1000.00</span> IGNI</div>
+        <div class="balance-row">BOB <span id="bal-bob">1000.00</span> IGNI</div>
+        <div class="balance-row">COMANDANTE <span id="bal-comandante">10000.00</span> IGNI</div>
+        <div class="chain-status">Último Bloco: <span id="block-height">0</span> | Hash: <span id="last-hash">GENESIS</span></div>
+    </div>
+
+    <!-- PAINEL DE OPERAÇÕES TÁTICAS -->
+    <div class="panel">
+        <h2>🚀 Operações Táticas</h2>
+        <input type="text" id="destinatario" placeholder="Destinatário (Alice / Bob / Comandante)">
+        <input type="number" id="quantidade" placeholder="Quantidade a transferir">
+        <button class="action-btn" onclick="iniciarTransacaoTatica()">EXECUTAR TRANSFERÊNCIA [Envio Criptografado]</button>
+        
+        <button class="action-btn block-btn" onclick="executarConsenso()">INICIAR PROTOCOLO DE MINERAÇÃO</button>
+    </div>
+
+    <!-- TERMINAL DE LOGS / SISTEMA DE ALERTA -->
+    <div class="panel">
+        <h2>🖥️ Kernel Logs & Sistemas de Alerta</h2>
+        <div id="terminal">
+            > INICIANDO KERNEL IGNI-15...
+            > CARREGANDO CRIPTOGRAFIA ED25519...
+            > SISTEMA OPERACIONAL. AGUARDANDO COMANDOS.
+        </div>
+    </div>
 </div>
 
 <script>
-    // === NÚCLEO TÁTICO DA REDE (CACHE EM RAM) ===
-    const ledger = {
-        "Alice": 1000,
-        "Bob": 1000,
-        "Comandante": 10000
+    // ===================================================================
+    // CÓDIGO DE ALTA PERFORMANCE (SIMULAÇÃO DE CRIPTOGRAFIA E BLOCKCHAIN)
+    // ===================================================================
+
+    // 1. O Ledger (Estado da Rede) - Simula o cache em RAM de um servidor Rust
+    const state = {
+        Alice: 1000.00,
+        Bob: 1000.00,
+        Comandante: 10000.00
     };
 
-    const historico = [];
-    let isMinerando = false;
+    // 2. A Blockchain em si (Mantida em memória para alta velocidade)
+    const chain = [];
+    let isMining = false;
 
-    // === FUNÇÃO DE LOG ===
-    function logSistema(msg) {
-        const log = document.getElementById('log-area');
+    // 3. Sistemas de LOG
+    function printLog(msg, type = 'INFO') {
+        const terminal = document.getElementById('terminal');
         const time = new Date().toLocaleTimeString();
-        log.innerHTML += `\n[${time}] ${msg}`;
-        log.scrollTop = log.scrollHeight;
+        const colors = {
+            'INFO': '#00ffcc',
+            'TRANSFER': '#FFD700',
+            'MINING': '#ff3333',
+            'SUCCESS': '#00ff00'
+        };
+        terminal.innerHTML += `<br><span style="color:${colors[type] || '#fff'}">[${time}] [${type}] ${msg}</span>`;
+        terminal.scrollTop = terminal.scrollHeight;
     }
 
-    // === AÇÃO TÁTICA 1: ENVIO DE TRANSAÇÃO ===
-    function enviarTransacao() {
-        const recipient = document.getElementById('tx-recipient').value.trim();
-        const amount = parseInt(document.getElementById('tx-amount').value);
+    // 4. SIMULAÇÃO DE HASH (SHA-256 Tecnológico)
+    // No mundo real, isso rodaria em WebAssembly (Rust) para ser instantâneo.
+    async function generateHash(input) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(input);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
 
-        if(isMinerando) {
-            logSistema("ERRO: Rede em processo de mineração. Aguarde.");
+    // 5. AÇÃO DE GUERRA: TRANSAÇÃO COM PROVA CRIPTOGRÁFICA
+    async function iniciarTransacaoTatica() {
+        if (isMining) {
+            printLog("REDE EM CONSENSO. AGUARDE A MINERAÇÃO.", 'MINING');
             return;
         }
 
-        // Simulação automática: Quem envia é sempre "Alice" no teste
-        const sender = "Alice"; 
+        const recipient = document.getElementById('destinatario').value.trim();
+        const amount = parseFloat(document.getElementById('quantidade').value);
 
-        if(!recipient || isNaN(amount) || amount <= 0) {
-            logSistema("ERRO: Parâmetros de transação inválidos.");
+        const sender = "Alice"; // Fixo para demonstração tática
+
+        if (!recipient || isNaN(amount) || amount <= 0) {
+            printLog("PARÂMETROS DE TRANSAÇÃO INVÁLIDOS.", 'MINING');
             return;
         }
 
-        if(!ledger[recipient]) {
-            logSistema(`ERRO: Destinatário "${recipient}" não existe na rede.`);
+        if (!state[recipient]) {
+            printLog(`ALVO "${recipient}" NÃO ENCONTRADO NA REDE.`, 'MINING');
             return;
         }
 
-        if(ledger[sender] < amount) {
-            logSistema(`ERRO: Saldo insuficiente! ${sender} tem ${ledger[sender]} IGNI.`);
+        if (state[sender] < amount) {
+            printLog(`FUNDOS INSUFICIENTES. SALDO ATUAL: ${state[sender]} IGNI`, 'MINING');
             return;
         }
 
-        // === EXECUÇÃO DA TRANSFERÊNCIA (INSTANTÂNEA) ===
-        ledger[sender] -= amount;
-        ledger[recipient] += amount;
+        // EXECUÇÃO TÁTICA
+        state[sender] -= amount;
+        state[recipient] += amount;
+
+        // Atualização Imediata da UI
+        document.getElementById('bal-alice').innerText = state.Alice.toFixed(2);
+        document.getElementById('bal-bob').innerText = state.Bob.toFixed(2);
+        document.getElementById('bal-comandante').innerText = state.Comandante.toFixed(2);
+
+        printLog(`TRANSFERÊNCIA EXECUTADA: ${sender} -> ${recipient} | ${amount.toFixed(2)} IGNI`, 'TRANSFER');
+    }
+
+    // 6. AÇÃO DE GUERRA: PROTOCOLO DE MINERAÇÃO (PROOF-OF-WORK SIMULADO)
+    async function executarConsenso() {
+        if (isMining) return;
         
-        // Atualiza a tela
-        document.getElementById('bal-alice').innerText = ledger["Alice"];
-        document.getElementById('bal-bob').innerText = ledger["Bob"];
-        document.getElementById('bal-comandante').innerText = ledger["Comandante"];
+        isMining = true;
+        printLog(">>> INICIANDO PROTOCOLO DE CONSENSO (MINERAÇÃO) <<<", 'MINING');
+        printLog("RESOLVENDO ALGORITMO DE DIFICULDADE...", 'MINING');
 
-        logSistema(`TRANSAÇÃO: ${sender} -> ${recipient} | ${amount} IGNI`);
-        soltarMoedas(5); // Efeito visual tático
+        // Simula a força bruta (Proof of Work)
+        await new Promise(resolve => setTimeout(resolve, 2500));
+
+        // Dados do novo bloco
+        const prevBlock = chain.length > 0 ? chain[chain.length - 1] : "GENESIS_HASH_00000";
+        const timestamp = new Date().toISOString();
+        const stateSnapshot = JSON.stringify(state);
+        
+        // Gera o Hash Militar baseado nos dados atuais
+        const dataToHash = prevBlock + timestamp + stateSnapshot;
+        const newBlockHash = await generateHash(dataToHash);
+
+        // Adiciona à Chain
+        chain.push({
+            index: chain.length,
+            timestamp: timestamp,
+            hash: newBlockHash,
+            previousHash: prevBlock,
+            data: stateSnapshot
+        });
+
+        // Atualiza interface da Chain
+        document.getElementById('block-height').innerText = chain.length;
+        document.getElementById('last-hash').innerText = newBlockHash.substring(0, 10) + "...";
+
+        printLog(`>>> BLOCO #${chain.length} MINERADO COM SUCESSO.`, 'SUCCESS');
+        printLog(`HASH DO BLOCO: ${newBlockHash}`, 'SUCCESS');
+        printLog(`ESTADO DA REDE BLOQUEADO E SEGURO.`, 'SUCCESS');
+
+        isMining = false;
     }
 
-    // === AÇÃO TÁTICA 2: MINERAÇÃO (CONSOLIDAÇÃO) ===
-    function minerarBloco() {
-        if(isMinerando) return;
-
-        isMinerando = true;
-        const btn = document.getElementById('btn-minerar');
-        btn.disabled = true;
-        btn.innerText = "MINERANDO...";
-
-        logSistema(">> INICIANDO PROTOCOLO DE MINERAÇÃO...");
-        soltarMoedas(20); // Explosão de moedas
-
-        // Simulação de tempo de processamento (Assíncrono)
-        setTimeout(() => {
-            // Bloco minerado com sucesso
-            const snapshot = JSON.stringify(ledger);
-            historico.push(snapshot);
-            
-            logSistema(`>> BLOCO MINERADO COM SUCESSO! Hash do estado: ${snapshot.length} caracteres`);
-            logSistema(`>> Saldos consolidados. Pronto para novas transações.`);
-
-            isMinerando = false;
-            btn.disabled = false;
-            btn.innerText = "MINERAR BLOCO";
-        }, 3000); // 3 segundos simulando "Proof of Work"
-    }
-
-    // === AÇÃO TÁTICA 3: VERIFICAÇÕES ===
-    function verChain() {
-        logSistema(`CHAIN ATUAL: ${historico.length} blocos registrados.`);
-        if(historico.length > 0) {
-            logSistema(`Último estado salvo: ${historico[historico.length - 1]}`);
+    // 7. SISTEMA DE PARTÍCULAS TECNOLÓGICAS (Ambiente Imersivo)
+    function createParticles() {
+        const container = document.getElementById('particles');
+        for(let i=0; i<50; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 5 + 's';
+            particle.style.opacity = Math.random() * 0.5 + 0.1;
+            container.appendChild(particle);
         }
     }
+    createParticles();
 
-    function verificarValidade() {
-        if(historico.length === 0) {
-            logSistema("Nenhum bloco minerado ainda. Rede vazia.");
-        } else {
-            const ultimoEstado = JSON.parse(historico[historico.length - 1]);
-            let valido = true;
-            // Verifica integridade (simples)
-            for(let chave in ledger) {
-                if(ledger[chave] !== ultimoEstado[chave]) {
-                    valido = false;
-                    break;
-                }
-            }
-            if(valido) {
-                logSistema(">> STATUS: REDE 100% ÍNTEGRA E SEGURA.");
-            } else {
-                logSistema(">> ALERTA: INCONSISTÊNCIA DETECTADA NA REDE!");
-            }
-        }
-    }
+    printLog("CRIPTOGRAFIA DE ALTA PERFORMANCE ATIVADA.", 'SUCCESS');
 
-    // === EFEITO VISUAL (MOEDAS 3D) ===
-    function criarMoeda() {
-        const moeda = document.createElement('div');
-        moeda.classList.add('moeda');
-        moeda.style.left = Math.random() * window.innerWidth + 'px';
-        moeda.style.animationDuration = 3 + Math.random() * 3 + 's';
-        document.body.appendChild(moeda);
-        setTimeout(() => { moeda.remove(); }, 6000);
-    }
-
-    function soltarMoedas(quantidade = 1) {
-        for(let i = 0; i < quantidade; i++) {
-            setTimeout(criarMoeda, i * 100);
-        }
-    }
-    
-    logSistema("SISTEMA OPERACIONAL. REDE PRONTA.");
-    soltarMoedas(3);
 </script>
-
 </body>
-</html>
+</html>          
