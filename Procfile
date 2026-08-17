@@ -1,0 +1,1 @@
+    web: gunicorn igni_v2:app
