@@ -1,180 +1,194 @@
-
-from flask import Flask, render_template_string, request
+import os
+import json
 import hashlib
 import time
-import json
-import os
+from flask import Flask, render_template_string, request, redirect, url_for
 
 app = Flask(__name__)
+ARQUIVO_CADEIA = 'igni_chain.json'
 
-ARQUIVO_CHAIN = "igni_chain.json"
+class Bloco:
+    def __init__(self, indice, transacoes, hash_anterior):
+        self.indice = indice
+        self.transacoes = transacoes
+        self.hash_anterior = hash_anterior
+        self.timestamp = time.time()
+        self.hash = self.calcular_hash()
 
-class Block:
-    def __init__(self, index, transactions, timestamp, previous_hash):
-        self.index = index
-        self.transactions = transactions
-        self.timestamp = timestamp
-        self.previous_hash = previous_hash
-        self.nonce = 0
-        self.hash = self.calculate_hash()
-    
-    def calculate_hash(self):
-        block_string = f"{self.index}{self.transactions}{self.timestamp}{self.previous_hash}{self.nonce}"
-        return hashlib.sha256(block_string.encode()).hexdigest()
+    def calcular_hash(self):
+        dados = str(self.indice) + str(self.transacoes) + str(self.hash_anterior) + str(self.timestamp)
+        return hashlib.sha256(dados.encode()).hexdigest()
 
-class Blockchain:
-    def __init__(self):
-        self.chain = [self.create_genesis_block()]
-        self.pending_transactions = []
-    
-    def create_genesis_block(self):
-        return Block(0, ["Genesis Block"], time.time(), "0")
-    
-    def get_latest_block(self):
-        return self.chain[-1]
-    
-    def add_block(self, transactions):
-        new_block = Block(len(self.chain), transactions, time.time(), self.get_latest_block().hash)
-        self.chain.append(new_block)
-    
-    def is_chain_valid(self):
-        for i in range(1, len(self.chain)):
-            current = self.chain[i]
-            previous = self.chain[i-1]
-            if current.hash!= current.calculate_hash(): 
-                return False
-            if current.previous_hash!= previous.hash: 
-                return False
-        return True
+    def to_dict(self):
+        return {'indice': self.indice, 'transacoes': self.transacoes, 'hash_anterior': self.hash_anterior, 'timestamp': self.timestamp, 'hash': self.hash}
 
-def salvar_chain():
-    data = []
-    for block in igni_chain.chain:
-        data.append({
-            'index': block.index,
-            'transactions': block.transactions,
-            'timestamp': block.timestamp,
-            'previous_hash': block.previous_hash,
-            'nonce': block.nonce,
-            'hash': block.hash
-        })
-    with open(ARQUIVO_CHAIN, 'w') as f:
-        json.dump(data, f)
+    @staticmethod
+    def from_dict(dados):
+        bloco = Bloco(dados['indice'], dados['transacoes'], dados['hash_anterior'])
+        bloco.timestamp = dados['timestamp']
+        bloco.hash = dados['hash']
+        return bloco
 
-def carregar_chain():
-    global igni_chain
-    if os.path.exists(ARQUIVO_CHAIN):
-        with open(ARQUIVO_CHAIN, 'r') as f:
-            data = json.load(f)
-            igni_chain.chain = []
-            for b in data:
-                block = Block(b['index'], b['transactions'], b['timestamp'], b['previous_hash'])
-                block.nonce = b['nonce']
-                block.hash = b['hash']
-                igni_chain.chain.append(block)
+def salvar_cadeia(cadeia):
+    with open(ARQUIVO_CADEIA, 'w') as f:
+        json.dump([bloco.to_dict() for bloco in cadeia], f, indent=4)
 
-igni_chain = Blockchain()
-carregar_chain()
+def carregar_cadeia():
+    if os.path.exists(ARQUIVO_CADEIA):
+        with open(ARQUIVO_CADEIA, 'r') as f:
+            dados = json.load(f)
+            return [Bloco.from_dict(bloco) for bloco in dados]
+    return []
 
-def get_balance(address):
-    balance = 0
-    for block in igni_chain.chain:
-        for tx in block.transactions:
-            if isinstance(tx, str) and ">" in tx:
-                parts = tx.split(" > ")
-                if len(parts) == 3:
-                    sender, receiver, amount = parts
-                    amount = int(amount)
-                    if sender == address: 
-                        balance -= amount
-                    if receiver == address: 
-                        balance += amount
-    return balance
+blockchain = carregar_cadeia()
+transacoes_pendentes = []
+
+if not blockchain:
+    bloco_genesis = Bloco(0, ["Genesis Block"], "0")
+    blockchain.append(bloco_genesis)
+    salvar_cadeia(blockchain)
+
+def calcular_saldos():
+    saldos = {'Alice': 0, 'Bob': 0, 'Comandante': 0}
+    for bloco in blockchain:
+        for tx in bloco.transacoes:
+            if tx!= "Genesis Block":
+                try:
+                    partes = tx.split(' > ')
+                    de = partes[0]
+                    para = partes[1]
+                    valor = int(partes[2])
+                    if de in saldos: saldos[de] -= valor
+                    if para in saldos: saldos[para] += valor
+                except: pass
+    return saldos
 
 HTML = '''
 <!DOCTYPE html>
 <html>
 <head>
-    <title>IGNI-15 V9.8.0 MEMORIA ETERNA</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>IGNI-15 V9.8.2 OURO 3D</title>
     <style>
-        body{background:#0a0a0a;color:#fff;font-family:Arial;text-align:center;padding:20px}
-       .card{background:#1a1a1a;border:2px solid #FFD700;border-radius:15px;padding:20px;margin:10px auto;max-width:300px}
-        h1{color:#FFD700;text-shadow:0 0 10px #FFD700}
-        input,button{padding:10px;margin:5px;border-radius:8px;border:none;font-size:16px}
-        input{background:#333;color:#fff;width:200px}
-        button{background:#FFD700;color:#000;font-weight:bold;cursor:pointer}
-        button:hover{background:#FFA500}
-        a{text-decoration:none;color:#FFD700}
+        body { 
+            background: #000; 
+            color: #FFD700; 
+            font-family: Arial; 
+            text-align: center; 
+            margin: 0; 
+            overflow: hidden;
+        }
+       .moedas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 0;
+        }
+       .moeda {
+            position: absolute; width: 30px; height: 30px;
+            background: radial-gradient(circle at 30% 30%, #FFF, #FFD700, #B8860B);
+            border-radius: 50%; box-shadow: 0 0 15px #FFD700;
+            animation: cair 5s linear infinite;
+        }
+        @keyframes cair {
+            0% { transform: translateY(-100px) rotateX(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotateX(720deg); opacity: 0; }
+        }
+       .conteudo { position: relative; z-index: 1; }
+       .titulo { font-size: 32px; text-shadow: 0 0 20px #FFD700; margin: 20px; }
+       .card { 
+            border: 2px solid #FFD700; border-radius: 15px; padding: 20px; 
+            margin: 15px; background: rgba(0,0,0,0.8);
+            box-shadow: 0 0 20px rgba(255,215,0,0.3);
+        }
+       .saldo { font-size: 28px; font-weight: bold; text-shadow: 0 0 15px #FFD700; }
+        input, select { 
+            padding: 10px; margin: 5px; border-radius: 8px; 
+            border: 1px solid #FFD700; background: #111; color: #FFD700; 
+        }
+        button { 
+            background: linear-gradient(45deg, #FFD700, #B8860B); 
+            color: #000; padding: 12px 20px; border: none; 
+            border-radius: 10px; font-weight: bold; cursor: pointer; 
+            box-shadow: 0 0 15px #FFD700; margin: 5px;
+        }
     </style>
 </head>
 <body>
-    <h1>💎 IGNI-15 V9.8.0 MEMORIA ETERNA</h1>
+    <div class="moedas" id="moedas"></div>
     
-    <div class="card">
-        <h2>ALICE</h2>
-        <h1>{{saldo_alice}} IGNI</h1>
+    <div class="conteudo">
+        <h1 class="titulo">MEMORIA ETERNA</h1>
+        
+        <div class="card">
+            <h2>ALICE</h2>
+            <div class="saldo">{{ saldos['Alice'] }} IGNI</div>
+        </div>
+        
+        <div class="card">
+            <h2>BOB</h2>
+            <div class="saldo">{{ saldos['Bob'] }} IGNI</div>
+        </div>
+        
+        <div class="card">
+            <h2>COMANDANTE</h2>
+            <div class="saldo">{{ saldos['Comandante'] }} IGNI</div>
+        </div>
+
+        <div class="card">
+            <h2>ENVIAR TRANSAÇÃO</h2>
+            <form action="/enviar" method="post">
+                DE: <select name="de"><option>Comandante</option><option>Alice</option><option>Bob</option></select><br>
+                PARA: <select name="para"><option>Alice</option><option>Bob</option><option>Comandante</option></select><br>
+                QUANTIDADE: <input type="number" name="quantidade" value="1000"><br>
+                <button type="submit">ENVIAR TX</button>
+            </form>
+            <form action="/minerar" method="post">
+                <button type="submit">MINERAR BLOCO</button>
+            </form>
+        </div>
     </div>
-    
-    <div class="card">
-        <h2>BOB</h2>
-        <h1>{{saldo_bob}} IGNI</h1>
-    </div>
-    
-    <div class="card">
-        <h2>COMANDANTE</h2>
-        <h1>{{saldo_comandante}} IGNI</h1>
-    </div>
-    
-    <div class="card">
-        <h3>ENVIAR TRANSAÇÃO</h3>
-        <form action="/transaction" method="post">
-            <input name="sender" placeholder="DE: Alice/Bob/Comandante"><br>
-            <input name="receiver" placeholder="PARA: Alice/Bob/Comandante"><br>
-            <input name="amount" placeholder="QUANTIDADE" type="number"><br>
-            <button type="submit">ENVIAR TX</button>
-        </form>
-    </div>
-    
-    <br>
-    <a href="/mine"><button>MINERAR BLOCO</button></a>
-    <a href="/chain"><button>VER CORRENTE</button></a>
-    <a href="/verify"><button>VERIFICAR</button></a>
+
+<script>
+    function criarMoeda() {
+        const moeda = document.createElement('div');
+        moeda.className = 'moeda';
+        moeda.style.left = Math.random() * 100 + '%';
+        moeda.style.animationDuration = (Math.random() * 3 + 3) + 's';
+        document.getElementById('moedas').appendChild(moeda);
+        setTimeout(() => moeda.remove(), 6000);
+    }
+    setInterval(criarMoeda, 300);
+</script>
 </body>
 </html>
 '''
 
 @app.route('/')
 def home():
-    return render_template_string(HTML, 
-        saldo_alice=get_balance("Alice"), 
-        saldo_bob=get_balance("Bob"), 
-        saldo_comandante=get_balance("Comandante")
-    )
+    saldos = calcular_saldos()
+    return render_template_string(HTML, saldos=saldos)
 
-@app.route('/mine')
-def mine():
-    igni_chain.add_block(igni_chain.pending_transactions)
-    igni_chain.pending_transactions = []
-    salvar_chain()
-    return '<h1 style="color:gold">BLOCO MINERADO E SALVO!</h1><a href="/">VOLTAR</a>'
+@app.route('/enviar', methods=['POST'])
+def enviar():
+    de = request.form['de']
+    para = request.form['para']
+    quantidade = request.form['quantidade']
+    tx = f"{de} > {para} > {quantidade}"
+    transacoes_pendentes.append(tx)
+    return "TX ENVIADA E SALVA! <a href='/' style='color:gold'>VOLTAR</a>"
 
-@app.route('/transaction', methods=['POST'])
-def transaction():
-    tx = f"{request.form['sender']} > {request.form['receiver']} > {request.form['amount']}"
-    igni_chain.pending_transactions.append(tx)
-    salvar_chain()
-    return '<h1 style="color:gold">TX ENVIADA E SALVA!</h1><a href="/">VOLTAR</a>'
+@app.route('/minerar', methods=['POST'])
+def minerar():
+    global transacoes_pendentes
+    if transacoes_pendentes:
+        ultimo = blockchain[-1]
+        novo = Bloco(len(blockchain), transacoes_pendentes, ultimo.hash)
+        blockchain.append(novo)
+        salvar_cadeia(blockchain)
+        transacoes_pendentes = []
+    return "BLOCO MINERADO E SALVO! <a href='/' style='color:gold'>VOLTAR</a>"
 
 @app.route('/chain')
-def chain():
-    blocks = "<br>".join([f"Bloco {b.index}: {b.transactions}" for b in igni_chain.chain])
-    return f"<h1 style='color:gold'>CORRENTE IGNI</h1>{blocks}<br><br><a href='/'>VOLTAR</a>"
-
-@app.route('/verify')
-def verify():
-    valid = "100% VALIDA" if igni_chain.is_chain_valid() else "INVALIDA"
-    return f"<h1 style='color:gold'>CHAIN {valid}</h1><a href='/'>VOLTAR</a>"
+def ver_chain():
+    return {'cadeia': [b.to_dict() for b in blockchain]}
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=10000)
+    app.run(host='0.0.0.0', port=5000)
