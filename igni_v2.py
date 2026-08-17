@@ -1,82 +1,178 @@
-from flask import Flask, jsonify, request, render_template 
-import hashlib 
-import json 
-from time import time 
+from flask import Flask, render_template_string, request, jsonify
+import hashlib
+import time
 
-app = Flask(__name__) 
+app = Flask(__name__)
 
-class Blockchain: 
-    def __init__(self): 
-        self.chain = [] 
-        self.current_transactions = [] 
-        self.new_block(previous_hash='1', proof=100) 
+class Block:
+    def __init__(self, index, transactions, timestamp, previous_hash):
+        self.index = index
+        self.transactions = transactions
+        self.timestamp = timestamp
+        self.previous_hash = previous_hash
+        self.nonce = 0
+        self.hash = self.calculate_hash()
 
-    def new_block(self, proof, previous_hash=None): 
-        block = { 
-            'index': len(self.chain) + 1, 
-            'timestamp': time(), 
-            'transactions': self.current_transactions, 
-            'proof': proof, 
-            'previous_hash': previous_hash or self.hash(self.chain[-1]), 
-        } 
-        self.chain.append(block)              # <- PRIMEIRO SALVA
-        self.current_transactions = []        # <- DEPOIS LIMPA
-        return block 
+    def calculate_hash(self):
+        block_string = f"{self.index}{self.transactions}{self.timestamp}{self.previous_hash}{self.nonce}"
+        return hashlib.sha256(block_string.encode()).hexdigest()
 
-    def new_transaction(self, sender, recipient, amount): 
-        self.current_transactions.append({ 
-            'sender': sender, 
-            'recipient': recipient, 
-            'amount': amount, 
-        }) 
-        return self.last_block['index'] + 1 
+class Blockchain:
+    def __init__(self):
+        self.chain = [self.create_genesis_block()]
+        self.pending_transactions = []
 
-    @property 
-    def last_block(self): 
-        return self.chain[-1] 
+    def create_genesis_block(self):
+        return Block(0, ["Genesis Block"], time.time(), "0")
 
-    @staticmethod 
-    def hash(block): 
-        block_string = json.dumps(block, sort_keys=True).encode() 
-        return hashlib.sha256(block_string).hexdigest() 
+    def get_latest_block(self):
+        return self.chain[-1]
 
-blockchain = Blockchain() 
+    def add_block(self, transactions):
+        new_block = Block(len(self.chain), transactions, time.time(), self.get_latest_block().hash)
+        self.chain.append(new_block)
 
-@app.route('/') 
-def home(): 
-    return render_template('index.html') 
+    def is_chain_valid(self):
+        for i in range(1, len(self.chain)):
+            current = self.chain[i]
+            previous = self.chain[i-1]
+            if current.hash!= current.calculate_hash():
+                return False
+            if current.previous_hash!= previous.hash:
+                return False
+        return True
 
-@app.route('/mine', methods=['GET']) 
-def mine(): 
-    last_block = blockchain.last_block 
-    proof = 123 
-    previous_hash = blockchain.hash(last_block) 
-    block = blockchain.new_block(proof, previous_hash) 
-    response = { 
-        'message': "BLOCO MINERADO!", 
-        'index': block['index'], 
-        'transactions': block['transactions'], 
-        'proof': block['proof'], 
-        'previous_hash': block['previous_hash'] 
-    } 
-    return jsonify(response), 200 
+igni_chain = Blockchain()
 
-@app.route('/transaction', methods=['POST']) 
-def new_transaction(): 
-    values = request.form 
-    index = blockchain.new_transaction(values['sender'], values['recipient'], values['amount']) 
-    response = {'message': f'Transação será adicionada ao Bloco {index}'} 
-    return jsonify(response), 201 
+HTML = '''
+<!DOCTYPE html>
+<html>
+<head>
+    <title>IGNI-15 V9.6.2 DARK</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        body {
+            background: #0a0a0a;
+            color: #e0e0e0;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 {
+            color: #00ff88;
+            text-shadow: 0 0 10px #00ff88;
+            font-size: 32px;
+        }
+        h1 i {
+            font-size: 36px;
+        }
+      .container { max-width: 600px; margin: auto; }
+      .bloco {
+            background: #1a1a1a;
+            border: 1px solid #00ff88;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            text-align: left;
+            box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
+        }
+        button {
+            background: #00ff88;
+            color: #0a0a0a;
+            border: none;
+            padding: 12px 25px; /* BOTÃO NORMAL */
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 8px;
+            font-size: 17px; /* TEXTO MAIS LEGÍVEL */
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px; /* ESPAÇO DO ÍCONE */
+        }
+        button i {
+            font-size: 22px; /* ÍCONE MAIOR MAS NÃO GIGANTE */
+        }
+        button:hover {
+            background: #00cc6a;
+            box-shadow: 0 0 12px #00ff88;
+        }
+        input {
+            background: #222;
+            color: #e0e0e0;
+            border: 1px solid #444;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px;
+            font-size: 16px;
+            width: 80%;
+        }
+      .tx-form { background: #111; padding: 15px; border-radius: 10px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fa-solid fa-cube"></i> IGNI-15 V9.6.2 DARK <i class="fa-solid fa-cube"></i></h1>
 
-@app.route('/chain', methods=['GET']) 
-def full_chain(): 
-    response = {'chain': blockchain.chain, 'length': len(blockchain.chain)} 
-    return jsonify(response), 200 
+        <button onclick="window.location.href='/mine'">
+            <i class="fa-solid fa-hammer"></i> MINERAR
+        </button>
 
-@app.route('/verify', methods=['GET']) 
-def verify(): 
-    response = {'valid': True} 
-    return jsonify(response), 200 
+        <button onclick="window.location.href='/chain'">
+            <i class="fa-solid fa-link"></i> VER CHAIN
+        </button>
 
-if __name__ == '__main__': 
+        <button onclick="window.location.href='/verify'">
+            <i class="fa-solid fa-shield-halved"></i> VERIFICAR
+        </button>
+
+        <div class="tx-form">
+            <h2><i class="fa-solid fa-paper-plane"></i> ENVIAR TRANSAÇÃO</h2>
+            <form action="/transaction" method="post">
+                <input type="text" name="sender" placeholder="De: Gênesis" required><br>
+                <input type="text" name="receiver" placeholder="Para: Comandante" required><br>
+                <input type="number" name="amount" placeholder="Quantidade: 1000" required><br>
+                <button type="submit"><i class="fa-solid fa-rocket"></i> ENVIAR</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
+'''
+
+@app.route('/')
+def home():
+    return render_template_string(HTML)
+
+@app.route('/mine')
+def mine():
+    igni_chain.add_block(igni_chain.pending_transactions)
+    igni_chain.pending_transactions = []
+    return "Bloco Minerado! <a href='/'>Voltar</a>"
+
+@app.route('/chain')
+def chain():
+    chain_data = []
+    for block in igni_chain.chain:
+        chain_data.append({
+            "index": block.index,
+            "hash": block.hash,
+            "prev": block.previous_hash,
+            "tx": block.transactions
+        })
+    return jsonify(chain_data)
+
+@app.route('/verify')
+def verify():
+    return f"Chain válida: {igni_chain.is_chain_valid()} <a href='/'>Voltar</a>"
+
+@app.route('/transaction', methods=['POST'])
+def transaction():
+    tx = f"{request.form['sender']} > {request.form['receiver']} > {request.form['amount']}"
+    igni_chain.pending_transactions.append(tx)
+    return f"Transação adicionada! <a href='/'>Voltar</a>"
+
+if __name__ == '__main__':
     app.run(host='0.0.0.0', port=10000)
