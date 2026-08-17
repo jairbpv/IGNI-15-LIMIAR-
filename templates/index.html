@@ -1,159 +1,143 @@
+
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>IGNI-15 V12.0.0 SUPREMA - Interface do Limiar</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IGNI-15 V12.0.0 SUPREMA</title>
 <style>
-body { 
-    background: #000; 
-    color: #FFD700; 
-    font-family: 'Courier New', monospace; 
-    text-align: center; 
-    padding: 20px; 
-}
-h1 { 
-    text-shadow: 0 0 15px #FFD700; 
-    margin-bottom: 5px;
-}
-.container { 
-    border: 2px solid #FFD700; 
-    padding: 20px; 
-    max-width: 700px; 
-    margin: 20px auto; 
-    border-radius: 10px; 
-    background: #111; 
-}
-input, button { 
-    background-color: #000; 
-    color: #FFD700; 
-    border: 1px solid #FFD700; 
-    padding: 10px; 
-    margin: 5px; 
-    width: 90%; 
-    border-radius: 5px; 
-    font-size: 16px;
-}
-button { 
-    cursor: pointer; 
-    font-weight: bold; 
-}
-button:hover { 
-    background-color: #FFD700; 
-    color: #000; 
-}
-#resultado { 
-    margin-top: 20px; 
-    white-space: pre-wrap; 
-    text-align: left; 
-    background: #000; 
-    padding: 10px; 
-    border-radius: 5px; 
-    border: 1px solid #FFD700;
-}
-.saldo { 
-    display: flex; 
-    justify-content: space-around; 
-    margin-bottom: 20px; 
-    flex-wrap: wrap;
-}
-.saldo-item {
-    background: #222;
-    padding: 10px;
-    border-radius: 5px;
-    margin: 5px;
-}
-#logs {
-    text-align: left;
-    max-height: 200px;
-    overflow-y: auto;
-    background: #000;
-    padding: 10px;
-    border-radius: 5px;
-}
+    /* IGNI-15 THEME MILITAR */
+    body {
+        background: #000000;
+        color: #FFD700;
+        font-family: 'Courier New', monospace;
+        font-size: 18px; /* FONTE MAIOR */
+        letter-spacing: 1.2px;
+        font-weight: bold;
+        margin: 20px;
+        overflow-x: hidden;
+    }
+
+    h1 {
+        font-size: 32px; /* TÍTULO GRANDE */
+        text-shadow: 0 0 15px #FFD700;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    h2 {
+        font-size: 22px;
+        border-bottom: 2px solid #FFD700;
+        padding-bottom: 5px;
+        margin-top: 30px;
+    }
+
+    .card {
+        background: #111;
+        border: 1px solid #FFD700;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+    }
+
+    button {
+        font-size: 16px;
+        font-weight: bold;
+        padding: 12px 20px;
+        background: #FFD700;
+        color: #000;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        margin: 5px;
+        transition: 0.3s;
+    }
+
+    button:hover {
+        box-shadow: 0 0 20px #FFD700;
+        transform: scale(1.05);
+    }
+
+    input {
+        font-size: 16px;
+        padding: 10px;
+        background: #222;
+        color: #FFD700;
+        border: 1px solid #FFD700;
+        border-radius: 5px;
+        font-family: 'Courier New', monospace;
+    }
+
+    /* MOEDAS 3D CAINDO */
+    .moeda {
+        position: fixed;
+        top: -50px;
+        width: 40px;
+        height: 40px;
+        background: radial-gradient(circle at 30% 30%, #FFD700, #B8860B);
+        border-radius: 50%;
+        box-shadow: 0 0 15px #FFD700, inset 0 0 10px rgba(0,0,0,0.4);
+        animation: cair linear forwards;
+        z-index: 9999;
+        transform-style: preserve-3d;
+    }
+
+    @keyframes cair {
+        0% { transform: translateY(-50px) rotateY(0deg) rotateX(0deg); opacity: 1; }
+        100% { transform: translateY(110vh) rotateY(720deg) rotateX(360deg); opacity: 0; }
+    }
 </style>
 </head>
 <body>
-<h1>👑 IGNI-15 V12.0.0 SUPREMA 👑</h1>
-<h2>INTERFACE DO LIMIAR + PROTOCOLO</h2>
 
-<div class="container">
-<h3>💰 Saldos da Rede</h3>
-<div id="saldos" class="saldo">Carregando...</div>
+<h1>IGNI-15 V12.0.0 SUPREMA</h1>
+
+<div class="card">
+    <h2>Saldos da Rede</h2>
+    <p>Alice: 1000 IGNI</p>
+    <p>Bob: 1000 IGNI</p>
+    <p>Comandante: 10000 IGNI</p>
 </div>
 
-<div class="container">
-<h3>💸 Criar Transação</h3>
-<input type="text" id="sender" placeholder="Sender: Alice">
-<input type="text" id="recipient" placeholder="Recipient: Bob">
-<input type="number" id="amount" placeholder="Amount: 100">
-<button onclick="criarTransacao()">Enviar Transação</button>
+<div class="card">
+    <h2>Criar Transação</h2>
+    <input type="text" placeholder="Destinatário">
+    <input type="number" placeholder="Quantidade">
+    <button onclick="soltarMoedas()">ENVIAR IGNI</button>
 </div>
 
-<div class="container">
-<h3>⛏️ Controle da Chain</h3>
-<button onclick="minerar()">MINERAR BLOCO</button>
-<button onclick="verChain()">VER CHAIN COMPLETA</button>
-<button onclick="verificar()">VERIFICAR VALIDADE</button>
+<div class="card">
+    <h2>Controle da Chain</h2>
+    <button onclick="soltarMoedas()">MINERAR BLOCO</button>
+    <button>VER CHAIN COMPLETA</button>
+    <button>VERIFICAR VALIDADE</button>
 </div>
-
-<div class="container">
-<h3>📢 Logs do Sistema de Alerta</h3>
-<div id="logs">Carregando logs...</div>
-</div>
-
-<div id="resultado"></div>
 
 <script>
-const API_URL = window.location.origin;
-
-async function atualizar() {
-    try {
-        const res = await fetch(API_URL + '/chain');
-        const data = await res.json();
+    // FUNÇÃO PARA SOLTAR MOEDAS 3D
+    function criarMoeda() {
+        const moeda = document.createElement('div');
+        moeda.classList.add('moeda');
+        moeda.style.left = Math.random() * window.innerWidth + 'px';
+        moeda.style.animationDuration = 3 + Math.random() * 3 + 's';
+        document.body.appendChild(moeda);
         
-        // Atualiza Saldos
-        document.getElementById('saldos').innerHTML = Object.entries(data.saldos)
-            .map(([k,v]) => `<div class="saldo-item"><b>${k}</b>: ${v} IGNI</div>`).join('');
-        
-        // Atualiza Logs
-        document.getElementById('logs').innerText = data.logs;
-    } catch(e) {
-        console.log("Aguardando servidor...")
+        setTimeout(() => {
+            moeda.remove();
+        }, 6000);
     }
-}
 
-async function criarTransacao() {
-    const s = document.getElementById('sender').value;
-    const r = document.getElementById('recipient').value;
-    const a = document.getElementById('amount').value;
-    const res = await fetch(API_URL + '/transactions/new', { 
-        method: 'POST', 
-        headers: {'Content-Type': 'application/json'}, 
-        body: JSON.stringify({sender: s, recipient: r, amount: parseFloat(a)}) 
-    });
-    document.getElementById('resultado').innerText = JSON.stringify(await res.json(), null, 2);
-    atualizar();
-}
+    function soltarMoedas() {
+        // Solta 20 moedas de uma vez
+        for(let i = 0; i < 20; i++) {
+            setTimeout(criarMoeda, i * 100);
+        }
+    }
 
-async function minerar() {
-    document.getElementById('resultado').innerText = 'Minerando... Aguarde';
-    const res = await fetch(API_URL + '/mine');
-    document.getElementById('resultado').innerText = '✅ BLOCO MINERADO!\n' + JSON.stringify(await res.json(), null, 2);
-    atualizar();
-}
-
-async function verChain() { 
-    const res = await fetch(API_URL + '/chain');
-    document.getElementById('resultado').innerText = JSON.stringify(await res.json(), null, 2); 
-}
-
-async function verificar() { 
-    const res = await fetch(API_URL + '/valid');
-    document.getElementById('resultado').innerText = 'STATUS: ' + JSON.stringify(await res.json(), null, 2); 
-}
-
-atualizar(); 
-setInterval(atualizar, 3000); // Atualiza a cada 3 seg
+    // Chuva de moedas leve o tempo todo
+    setInterval(criarMoeda, 500);
 </script>
+
 </body>
 </html>
