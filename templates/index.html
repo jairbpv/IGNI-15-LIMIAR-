@@ -1,27 +1,159 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
-    <title>IGNI-15 V9.5.9 - INTERFACE DO LIMIAR</title>
-    <style>
-        body { background: #000; color: #00ff00; font-family: monospace; padding: 20px; text-align: center; }
-        input, button { padding: 10px; margin: 5px; background: #111; color: #00ff00; border: 1px solid #00ff00; width: 250px; }
-        button { cursor: pointer; width: 200px; }
-    </style>
+<meta charset="UTF-8">
+<title>IGNI-15 V12.0.0 SUPREMA - Interface do Limiar</title>
+<style>
+body { 
+    background: #000; 
+    color: #FFD700; 
+    font-family: 'Courier New', monospace; 
+    text-align: center; 
+    padding: 20px; 
+}
+h1 { 
+    text-shadow: 0 0 15px #FFD700; 
+    margin-bottom: 5px;
+}
+.container { 
+    border: 2px solid #FFD700; 
+    padding: 20px; 
+    max-width: 700px; 
+    margin: 20px auto; 
+    border-radius: 10px; 
+    background: #111; 
+}
+input, button { 
+    background-color: #000; 
+    color: #FFD700; 
+    border: 1px solid #FFD700; 
+    padding: 10px; 
+    margin: 5px; 
+    width: 90%; 
+    border-radius: 5px; 
+    font-size: 16px;
+}
+button { 
+    cursor: pointer; 
+    font-weight: bold; 
+}
+button:hover { 
+    background-color: #FFD700; 
+    color: #000; 
+}
+#resultado { 
+    margin-top: 20px; 
+    white-space: pre-wrap; 
+    text-align: left; 
+    background: #000; 
+    padding: 10px; 
+    border-radius: 5px; 
+    border: 1px solid #FFD700;
+}
+.saldo { 
+    display: flex; 
+    justify-content: space-around; 
+    margin-bottom: 20px; 
+    flex-wrap: wrap;
+}
+.saldo-item {
+    background: #222;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 5px;
+}
+#logs {
+    text-align: left;
+    max-height: 200px;
+    overflow-y: auto;
+    background: #000;
+    padding: 10px;
+    border-radius: 5px;
+}
+</style>
 </head>
 <body>
-    <h1>IGNI-15 V9.5.9 - INTERFACE DO LIMIAR</h1>
-    
-    <h3>Criar Transação</h3>
-    <form action="/transaction" method="POST">
-        <input type="text" name="sender" placeholder="Sender" required><br>
-        <input type="text" name="recipient" placeholder="Recipient" required><br>
-        <input type="number" name="amount" placeholder="Amount" step="any" required><br>
-        <button type="submit">Enviar Transação</button>
-    </form>
-    
-    <br>
-    <form action="/mine" method="GET"><button>MINERAR</button></form>
-    <form action="/chain" method="GET"><button>VER CHAIN</button></form>
-    <form action="/valid" method="GET"><button>VERIFICAR CHAIN</button></form>
+<h1>👑 IGNI-15 V12.0.0 SUPREMA 👑</h1>
+<h2>INTERFACE DO LIMIAR + PROTOCOLO</h2>
+
+<div class="container">
+<h3>💰 Saldos da Rede</h3>
+<div id="saldos" class="saldo">Carregando...</div>
+</div>
+
+<div class="container">
+<h3>💸 Criar Transação</h3>
+<input type="text" id="sender" placeholder="Sender: Alice">
+<input type="text" id="recipient" placeholder="Recipient: Bob">
+<input type="number" id="amount" placeholder="Amount: 100">
+<button onclick="criarTransacao()">Enviar Transação</button>
+</div>
+
+<div class="container">
+<h3>⛏️ Controle da Chain</h3>
+<button onclick="minerar()">MINERAR BLOCO</button>
+<button onclick="verChain()">VER CHAIN COMPLETA</button>
+<button onclick="verificar()">VERIFICAR VALIDADE</button>
+</div>
+
+<div class="container">
+<h3>📢 Logs do Sistema de Alerta</h3>
+<div id="logs">Carregando logs...</div>
+</div>
+
+<div id="resultado"></div>
+
+<script>
+const API_URL = window.location.origin;
+
+async function atualizar() {
+    try {
+        const res = await fetch(API_URL + '/chain');
+        const data = await res.json();
+        
+        // Atualiza Saldos
+        document.getElementById('saldos').innerHTML = Object.entries(data.saldos)
+            .map(([k,v]) => `<div class="saldo-item"><b>${k}</b>: ${v} IGNI</div>`).join('');
+        
+        // Atualiza Logs
+        document.getElementById('logs').innerText = data.logs;
+    } catch(e) {
+        console.log("Aguardando servidor...")
+    }
+}
+
+async function criarTransacao() {
+    const s = document.getElementById('sender').value;
+    const r = document.getElementById('recipient').value;
+    const a = document.getElementById('amount').value;
+    const res = await fetch(API_URL + '/transactions/new', { 
+        method: 'POST', 
+        headers: {'Content-Type': 'application/json'}, 
+        body: JSON.stringify({sender: s, recipient: r, amount: parseFloat(a)}) 
+    });
+    document.getElementById('resultado').innerText = JSON.stringify(await res.json(), null, 2);
+    atualizar();
+}
+
+async function minerar() {
+    document.getElementById('resultado').innerText = 'Minerando... Aguarde';
+    const res = await fetch(API_URL + '/mine');
+    document.getElementById('resultado').innerText = '✅ BLOCO MINERADO!\n' + JSON.stringify(await res.json(), null, 2);
+    atualizar();
+}
+
+async function verChain() { 
+    const res = await fetch(API_URL + '/chain');
+    document.getElementById('resultado').innerText = JSON.stringify(await res.json(), null, 2); 
+}
+
+async function verificar() { 
+    const res = await fetch(API_URL + '/valid');
+    document.getElementById('resultado').innerText = 'STATUS: ' + JSON.stringify(await res.json(), null, 2); 
+}
+
+atualizar(); 
+setInterval(atualizar, 3000); // Atualiza a cada 3 seg
+</script>
 </body>
 </html>
