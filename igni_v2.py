@@ -48,7 +48,7 @@ HTML = '''
 <!DOCTYPE html>
 <html>
 <head>
-    <title>IGNI-15 V9.6.2 DARK</title>
+    <title>IGNI-15 V9.6.3 GOLD</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
@@ -60,44 +60,44 @@ HTML = '''
             text-align: center;
         }
         h1 {
-            color: #00ff88;
-            text-shadow: 0 0 10px #00ff88;
+            color: #ffdd00;
+            text-shadow: 0 0 10px #ffdd00, 0 0 20px #ffdd00;
             font-size: 32px;
         }
         h1 i {
             font-size: 36px;
         }
-      .container { max-width: 600px; margin: auto; }
-      .bloco {
+       .container { max-width: 600px; margin: auto; }
+       .bloco {
             background: #1a1a1a;
-            border: 1px solid #00ff88;
+            border: 1px solid #ffdd00;
             border-radius: 10px;
             padding: 15px;
             margin: 10px 0;
             text-align: left;
-            box-shadow: 0 0 15px rgba(0, 255, 136, 0.2);
+            box-shadow: 0 0 15px rgba(255, 221, 0, 0.3);
         }
         button {
-            background: #00ff88;
+            background: #ffdd00;
             color: #0a0a0a;
             border: none;
-            padding: 12px 25px; /* BOTÃO NORMAL */
+            padding: 12px 25px;
             border-radius: 6px;
             font-weight: bold;
             cursor: pointer;
             margin: 8px;
-            font-size: 17px; /* TEXTO MAIS LEGÍVEL */
+            font-size: 17px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 10px; /* ESPAÇO DO ÍCONE */
+            gap: 10px;
         }
         button i {
-            font-size: 22px; /* ÍCONE MAIOR MAS NÃO GIGANTE */
+            font-size: 22px;
         }
         button:hover {
-            background: #00cc6a;
-            box-shadow: 0 0 12px #00ff88;
+            background: #ffcc00;
+            box-shadow: 0 0 15px #ffdd00, 0 0 25px #ffdd00;
         }
         input {
             background: #222;
@@ -109,12 +109,12 @@ HTML = '''
             font-size: 16px;
             width: 80%;
         }
-      .tx-form { background: #111; padding: 15px; border-radius: 10px; margin: 20px 0; }
+       .tx-form { background: #111; padding: 15px; border-radius: 10px; margin: 20px 0; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1><i class="fa-solid fa-cube"></i> IGNI-15 V9.6.2 DARK <i class="fa-solid fa-cube"></i></h1>
+        <h1><i class="fa-solid fa-cube"></i> IGNI-15 V9.6.3 GOLD <i class="fa-solid fa-cube"></i></h1>
 
         <button onclick="window.location.href='/mine'">
             <i class="fa-solid fa-hammer"></i> MINERAR
