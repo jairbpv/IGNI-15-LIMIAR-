@@ -148,4 +148,4 @@ def ver_chain():
     return {'cadeia': [b.to_dict() for b in blockchain]}
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000) 
