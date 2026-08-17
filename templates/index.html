@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -11,7 +10,7 @@
         background: #000000;
         color: #FFD700;
         font-family: 'Courier New', monospace;
-        font-size: 18px; /* FONTE MAIOR */
+        font-size: 18px;
         letter-spacing: 1.2px;
         font-weight: bold;
         margin: 20px;
@@ -19,7 +18,7 @@
     }
 
     h1 {
-        font-size: 32px; /* TÍTULO GRANDE */
+        font-size: 32px;
         text-shadow: 0 0 15px #FFD700;
         text-align: center;
         margin-bottom: 20px;
@@ -41,6 +40,18 @@
         box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
     }
 
+    /* Log de operações militares */
+    #log-area {
+        background: #000;
+        color: #0f0; /* Verde militar de terminal */
+        border: 1px solid #555;
+        padding: 10px;
+        height: 100px;
+        overflow-y: scroll;
+        font-size: 14px;
+        font-family: monospace;
+    }
+
     button {
         font-size: 16px;
         font-weight: bold;
@@ -59,7 +70,16 @@
         transform: scale(1.05);
     }
 
+    button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+
     input {
+        width: 90%;
+        box-sizing: border-box;
         font-size: 16px;
         padding: 10px;
         background: #222;
@@ -67,9 +87,9 @@
         border: 1px solid #FFD700;
         border-radius: 5px;
         font-family: 'Courier New', monospace;
+        margin-bottom: 10px;
     }
 
-    /* MOEDAS 3D CAINDO */
     .moeda {
         position: fixed;
         top: -50px;
@@ -81,6 +101,7 @@
         animation: cair linear forwards;
         z-index: 9999;
         transform-style: preserve-3d;
+        pointer-events: none;
     }
 
     @keyframes cair {
@@ -94,49 +115,161 @@
 <h1>IGNI-15 V12.0.0 SUPREMA</h1>
 
 <div class="card">
-    <h2>Saldos da Rede</h2>
-    <p>Alice: 1000 IGNI</p>
-    <p>Bob: 1000 IGNI</p>
-    <p>Comandante: 10000 IGNI</p>
+    <h2>Saldos da Rede (Cache Tático)</h2>
+    <p><span id="bal-alice">1000</span> IGNI (Alice)</p>
+    <p><span id="bal-bob">1000</span> IGNI (Bob)</p>
+    <p><span id="bal-comandante">10000</span> IGNI (Comandante)</p>
+    <div id="log-area">Aguardando inicialização do sistema...</div>
 </div>
 
 <div class="card">
-    <h2>Criar Transação</h2>
-    <input type="text" placeholder="Destinatário">
-    <input type="number" placeholder="Quantidade">
-    <button onclick="soltarMoedas()">ENVIAR IGNI</button>
+    <h2>Criar Transação Tática</h2>
+    <input type="text" id="tx-recipient" placeholder="Destinatário (Alice, Bob ou Comandante)">
+    <input type="number" id="tx-amount" placeholder="Quantidade" min="1">
+    <button onclick="enviarTransacao()">ENVIAR IGNI</button>
 </div>
 
 <div class="card">
     <h2>Controle da Chain</h2>
-    <button onclick="soltarMoedas()">MINERAR BLOCO</button>
-    <button>VER CHAIN COMPLETA</button>
-    <button>VERIFICAR VALIDADE</button>
+    <button id="btn-minerar" onclick="minerarBloco()">MINERAR BLOCO</button>
+    <button onclick="verChain()">VER CHAIN COMPLETA</button>
+    <button onclick="verificarValidade()">VERIFICAR VALIDADE</button>
 </div>
 
 <script>
-    // FUNÇÃO PARA SOLTAR MOEDAS 3D
+    // === NÚCLEO TÁTICO DA REDE (CACHE EM RAM) ===
+    const ledger = {
+        "Alice": 1000,
+        "Bob": 1000,
+        "Comandante": 10000
+    };
+
+    const historico = [];
+    let isMinerando = false;
+
+    // === FUNÇÃO DE LOG ===
+    function logSistema(msg) {
+        const log = document.getElementById('log-area');
+        const time = new Date().toLocaleTimeString();
+        log.innerHTML += `\n[${time}] ${msg}`;
+        log.scrollTop = log.scrollHeight;
+    }
+
+    // === AÇÃO TÁTICA 1: ENVIO DE TRANSAÇÃO ===
+    function enviarTransacao() {
+        const recipient = document.getElementById('tx-recipient').value.trim();
+        const amount = parseInt(document.getElementById('tx-amount').value);
+
+        if(isMinerando) {
+            logSistema("ERRO: Rede em processo de mineração. Aguarde.");
+            return;
+        }
+
+        // Simulação automática: Quem envia é sempre "Alice" no teste
+        const sender = "Alice"; 
+
+        if(!recipient || isNaN(amount) || amount <= 0) {
+            logSistema("ERRO: Parâmetros de transação inválidos.");
+            return;
+        }
+
+        if(!ledger[recipient]) {
+            logSistema(`ERRO: Destinatário "${recipient}" não existe na rede.`);
+            return;
+        }
+
+        if(ledger[sender] < amount) {
+            logSistema(`ERRO: Saldo insuficiente! ${sender} tem ${ledger[sender]} IGNI.`);
+            return;
+        }
+
+        // === EXECUÇÃO DA TRANSFERÊNCIA (INSTANTÂNEA) ===
+        ledger[sender] -= amount;
+        ledger[recipient] += amount;
+        
+        // Atualiza a tela
+        document.getElementById('bal-alice').innerText = ledger["Alice"];
+        document.getElementById('bal-bob').innerText = ledger["Bob"];
+        document.getElementById('bal-comandante').innerText = ledger["Comandante"];
+
+        logSistema(`TRANSAÇÃO: ${sender} -> ${recipient} | ${amount} IGNI`);
+        soltarMoedas(5); // Efeito visual tático
+    }
+
+    // === AÇÃO TÁTICA 2: MINERAÇÃO (CONSOLIDAÇÃO) ===
+    function minerarBloco() {
+        if(isMinerando) return;
+
+        isMinerando = true;
+        const btn = document.getElementById('btn-minerar');
+        btn.disabled = true;
+        btn.innerText = "MINERANDO...";
+
+        logSistema(">> INICIANDO PROTOCOLO DE MINERAÇÃO...");
+        soltarMoedas(20); // Explosão de moedas
+
+        // Simulação de tempo de processamento (Assíncrono)
+        setTimeout(() => {
+            // Bloco minerado com sucesso
+            const snapshot = JSON.stringify(ledger);
+            historico.push(snapshot);
+            
+            logSistema(`>> BLOCO MINERADO COM SUCESSO! Hash do estado: ${snapshot.length} caracteres`);
+            logSistema(`>> Saldos consolidados. Pronto para novas transações.`);
+
+            isMinerando = false;
+            btn.disabled = false;
+            btn.innerText = "MINERAR BLOCO";
+        }, 3000); // 3 segundos simulando "Proof of Work"
+    }
+
+    // === AÇÃO TÁTICA 3: VERIFICAÇÕES ===
+    function verChain() {
+        logSistema(`CHAIN ATUAL: ${historico.length} blocos registrados.`);
+        if(historico.length > 0) {
+            logSistema(`Último estado salvo: ${historico[historico.length - 1]}`);
+        }
+    }
+
+    function verificarValidade() {
+        if(historico.length === 0) {
+            logSistema("Nenhum bloco minerado ainda. Rede vazia.");
+        } else {
+            const ultimoEstado = JSON.parse(historico[historico.length - 1]);
+            let valido = true;
+            // Verifica integridade (simples)
+            for(let chave in ledger) {
+                if(ledger[chave] !== ultimoEstado[chave]) {
+                    valido = false;
+                    break;
+                }
+            }
+            if(valido) {
+                logSistema(">> STATUS: REDE 100% ÍNTEGRA E SEGURA.");
+            } else {
+                logSistema(">> ALERTA: INCONSISTÊNCIA DETECTADA NA REDE!");
+            }
+        }
+    }
+
+    // === EFEITO VISUAL (MOEDAS 3D) ===
     function criarMoeda() {
         const moeda = document.createElement('div');
         moeda.classList.add('moeda');
         moeda.style.left = Math.random() * window.innerWidth + 'px';
         moeda.style.animationDuration = 3 + Math.random() * 3 + 's';
         document.body.appendChild(moeda);
-        
-        setTimeout(() => {
-            moeda.remove();
-        }, 6000);
+        setTimeout(() => { moeda.remove(); }, 6000);
     }
 
-    function soltarMoedas() {
-        // Solta 20 moedas de uma vez
-        for(let i = 0; i < 20; i++) {
+    function soltarMoedas(quantidade = 1) {
+        for(let i = 0; i < quantidade; i++) {
             setTimeout(criarMoeda, i * 100);
         }
     }
-
-    // Chuva de moedas leve o tempo todo
-    setInterval(criarMoeda, 500);
+    
+    logSistema("SISTEMA OPERACIONAL. REDE PRONTA.");
+    soltarMoedas(3);
 </script>
 
 </body>
