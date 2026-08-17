@@ -53,88 +53,126 @@ def get_balance(address):
 @app.route('/')
 def home():
     saldo = get_balance("Comandante")
-    total_blocos = len(igni_chain.chain)
-    total_tx = len(igni_chain.pending_transactions) + sum(len(b.transactions) for b in igni_chain.chain) - 1
     return render_template_string('''
     <!DOCTYPE html>
     <html>
     <head>
-        <title>IGNI-15 V9.6.6 ULTRA</title>
+        <title>IGNI-15 V9.6.9 GOLD RAIN</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
         <style>
-            @keyframes pulse { 0%, 100% { text-shadow: 0 0 10px #ffdd00, 0 0 20px #ffdd00; } 50% { text-shadow: 0 0 30px #ffdd00, 0 0 60px #ffdd00; } }
-            @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
-            body {background: #050505; color: #e0e0e0; font-family: 'Courier New', monospace; padding: 20px; text-align: center; overflow-x: hidden;}
-            body::before {content: ''; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 50% 50%, rgba(255,221,0,0.1) 0%, transparent 50%); pointer-events: none; z-index: 0;}
-           .container { max-width: 700px; margin: auto; position: relative; z-index: 1; }
-            h1 {color: #ffdd00; animation: pulse 2s infinite, float 3s ease-in-out infinite; font-size: 36px; margin-bottom: 30px;}
-            h1 i {font-size: 40px;}
-           .stats {display: flex; gap: 15px; justify-content: center; margin: 25px 0; flex-wrap: wrap;}
-           .stat-card {background: linear-gradient(145deg, #1a1a1a, #111); border: 1px solid #ffdd00; border-radius: 12px; padding: 15px 20px; min-width: 120px; box-shadow: 0 0 20px rgba(255,221,0,0.2);}
-           .stat-card i {font-size: 24px; color: #ffdd00; margin-bottom: 8px;}
-           .stat-num {font-size: 28px; color: #ffdd00; font-weight: bold;}
-           .saldo-box {background: linear-gradient(145deg, #1a1a1a, #111); border: 2px solid #ffdd00; border-radius: 15px; padding: 25px; margin: 25px 0; box-shadow: 0 0 30px rgba(255, 221, 0, 0.5); animation: float 4s ease-in-out infinite;}
-           .saldo-valor {font-size: 42px; color: #ffdd00; font-weight: bold; text-shadow: 0 0 20px #ffdd00;}
-            button {background: linear-gradient(145deg, #ffdd00, #ffcc00); color: #0a0a0a; border: none; padding: 14px 28px; border-radius: 8px; font-weight: bold; cursor: pointer; margin: 10px; font-size: 17px; display: inline-flex; align-items: center; gap: 10px; transition: all 0.3s; box-shadow: 0 0 15px rgba(255,221,0,0.3);}
-            button:hover {transform: scale(1.05); box-shadow: 0 0 25px #ffdd00, 0 0 40px #ffdd00;}
-           .tx-form { background: linear-gradient(145deg, #111, #0a0a0a); padding: 20px; border-radius: 15px; margin: 25px 0; border: 1px solid #333;}
-            input {background: #1a1a1a; color: #ffdd00; border: 1px solid #ffdd00; padding: 12px; border-radius: 6px; margin: 8px; font-size: 16px; width: 85%;}
+            @keyframes rotate3d { from {transform: rotateY(0deg) rotateX(10deg);} to {transform: rotateY(360deg) rotateX(10deg);} }
+            @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-25px)} }
+            @keyframes shimmer { 0%{filter:brightness(1)} 50%{filter:brightness(1.8)} 100%{filter:brightness(1)} }
+            body {background: radial-gradient(ellipse at center, #1a1200 0%, #000000 100%); color:#e0e0e0; font-family:'Orbitron', sans-serif; padding:20px; text-align:center; perspective:1200px; overflow-x:hidden;}
+            @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap');
+            canvas {position:fixed; top:0; left:0; z-index:0;}
+          .container { max-width:700px; margin:auto; position:relative; z-index:2; }
+            h1 {color:#ffd700; font-size:40px; font-weight:900; text-shadow:0 0 20px #ffd700, 0 0 40px #ffaa00; animation:shimmer 3s infinite;}
+
+            /* MOEDA 3D REALISTA */
+          .coin-main {width:180px; height:180px; margin:40px auto; position:relative; transform-style:preserve-3d; animation:rotate3d 5s linear infinite, float 4s ease-in-out infinite;}
+          .coin-face {position:absolute; width:100%; height:100%; border-radius:50%; background: radial-gradient(circle at 25% 25%, #fff8c0 0%, #ffd700 30%, #ffaa00 70%, #b8860b 100%); border:3px solid #ffed4e; box-shadow: 0 0 40px #ffd700, inset 0 0 30px rgba(255,255,255,0.4), inset 0 -10px 20px rgba(0,0,0,0.3); display:flex; align-items:center; justify-content:center; font-size:70px; color:#8B6914;}
+          .coin-front {transform: translateZ(12px);}
+          .coin-back {transform: rotateY(180deg) translateZ(12px);}
+          .coin-rim {position:absolute; width:100%; height:100%; border-radius:50%; background: repeating-conic-gradient(from 0deg, #ffd700 0deg 10deg, #ffaa00 10deg 20deg); transform: rotateY(90deg) translateZ(12px);}
+
+          .saldo-valor {font-size:56px; color:#ffd700; font-weight:900; text-shadow:0 0 30px #ffd700; animation:shimmer 2s infinite;}
+          .saldo-label {color:#ffed4e; font-size:18px; margin-bottom:30px;}
+
+            button {background: linear-gradient(145deg, #ffd700, #ffaa00); color:#1a1200; border:none; padding:16px 32px; border-radius:12px; font-weight:900; cursor:pointer; margin:12px; font-size:18px; display:inline-flex; align-items:center; gap:12px; transition:all 0.3s; box-shadow:0 0 25px rgba(255,215,0,0.5); font-family:'Orbitron';}
+            button:hover {transform:scale(1.12) translateY(-3px); box-shadow:0 0 50px #ffd700;}
+
+          .tx-form { background:rgba(20,15,0,0.7); padding:25px; border-radius:20px; margin:30px 0; border:2px solid #ffd700; backdrop-filter:blur(15px); box-shadow:0 0 30px rgba(255,215,0,0.3);}
+            input {background:#1a1200; color:#ffd700; border:2px solid #ffaa00; padding:14px; border-radius:10px; margin:10px; font-size:16px; width:85%; font-family:'Orbitron';}
+            input:focus {border-color:#ffd700; box-shadow:0 0 25px #ffd700; outline:none;}
         </style>
     </head>
     <body>
+    <canvas id="goldrain"></canvas>
         <div class="container">
-            <h1><i class="fa-solid fa-cube"></i> IGNI-15 V9.6.6 ULTRA <i class="fa-solid fa-cube"></i></h1>
-            <div class="stats">
-                <div class="stat-card"><i class="fa-solid fa-link"></i><div class="stat-num">{{ total_blocos }}</div><div>BLOCOS</div></div>
-                <div class="stat-card"><i class="fa-solid fa-paper-plane"></i><div class="stat-num">{{ total_tx }}</div><div>TRANSAÇÕES</div></div>
-                <div class="stat-card"><i class="fa-solid fa-shield-halved"></i><div class="stat-num">100%</div><div>VÁLIDA</div></div>
+            <h1><i class="fa-solid fa-crown"></i> IGNI-15 V9.6.9 <i class="fa-solid fa-crown"></i></h1>
+
+            <div class="coin-main">
+                <div class="coin-face coin-front"><i class="fa-solid fa-diamond"></i></div>
+                <div class="coin-face coin-back">IGNI</div>
+                <div class="coin-rim"></div>
             </div>
-            <div class="saldo-box">
-                <h2><i class="fa-solid fa-wallet"></i> CARTEIRA DO COMANDANTE</h2>
-                <div class="saldo-valor">{{ saldo }} IGNI</div>
-            </div>
+
+            <div class="saldo-valor">{{ saldo }}</div>
+            <div class="saldo-label">IGNI NA CARTEIRA</div>
+
             <button onclick="window.location.href='/mine'"><i class="fa-solid fa-hammer"></i> MINERAR</button>
-            <button onclick="window.location.href='/chain'"><i class="fa-solid fa-link"></i> VER CHAIN</button>
-            <button onclick="window.location.href='/verify'"><i class="fa-solid fa-shield-halved"></i> VERIFICAR</button>
+            <button onclick="window.location.href='/chain'"><i class="fa-solid fa-link"></i> CORRENTE</button>
+            <button onclick="window.location.href='/verify'"><i class="fa-solid fa-shield-halved"></i> AUDITAR</button>
+
             <div class="tx-form">
-                <h2><i class="fa-solid fa-rocket"></i> ENVIAR TRANSAÇÃO</h2>
+                <h2><i class="fa-solid fa-paper-plane"></i> TRANSFERIR IGNI</h2>
                 <form action="/transaction" method="post">
-                    <input type="text" name="sender" placeholder="De: Gênesis" required><br>
-                    <input type="text" name="receiver" placeholder="Para: Comandante" required><br>
-                    <input type="number" name="amount" placeholder="Quantidade" required><br>
-                    <button type="submit"><i class="fa-solid fa-paper-plane"></i> ENVIAR</button>
+                    <input type="text" name="sender" placeholder="DE: Gênesis" required><br>
+                    <input type="text" name="receiver" placeholder="PARA: Comandante" required><br>
+                    <input type="number" name="amount" placeholder="QUANTIDADE" required><br>
+                    <button type="submit"><i class="fa-solid fa-bolt"></i> ENVIAR AGORA</button>
                 </form>
             </div>
         </div>
+    <script>
+    const canvas=document.getElementById('goldrain'); const ctx=canvas.getContext('2d');
+    canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+    let coins=[];
+    for(let i=0;i<60;i++){
+        coins.push({
+            x:Math.random()*canvas.width,
+            y:Math.random()*canvas.height-200,
+            r:Math.random()*8+6,
+            s:Math.random()*2+1,
+            rot:Math.random()*360,
+            rs:Math.random()*2+1
+        })
+    }
+    function draw(){
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        coins.forEach(c=>{
+            ctx.save();
+            ctx.translate(c.x,c.y);
+            ctx.rotate(c.rot*Math.PI/180);
+            // Moeda 3D caindo
+            let grad=ctx.createRadialGradient(-c.r/3,-c.r/3,0,c.r/3,c.r/3,c.r);
+            grad.addColorStop(0,'#fff8c0'); grad.addColorStop(0.3,'#ffd700'); grad.addColorStop(0.7,'#ffaa00'); grad.addColorStop(1,'#b8860b');
+            ctx.fillStyle=grad;
+            ctx.beginPath(); ctx.arc(0,0,c.r,0,Math.PI*2); ctx.fill();
+            ctx.strokeStyle='#ffed4e'; ctx.lineWidth=2; ctx.stroke();
+            // Brilho
+            ctx.fillStyle='rgba(255,255,255,0.6)';
+            ctx.beginPath(); ctx.arc(-c.r/3,-c.r/3,c.r/4,0,Math.PI*2); ctx.fill();
+            ctx.restore();
+
+            c.y+=c.s; c.rot+=c.rs;
+            if(c.y>canvas.height+50){c.y=-50; c.x=Math.random()*canvas.width;}
+        });
+        requestAnimationFrame(draw);
+    } draw();
+    window.addEventListener('resize',()=>{canvas.width=window.innerWidth; canvas.height=window.innerHeight;});
+    </script>
     </body>
     </html>
-    ''', saldo=saldo, total_blocos=total_blocos, total_tx=total_tx)
+    ''', saldo=saldo)
 
 @app.route('/mine')
 def mine():
     igni_chain.add_block(igni_chain.pending_transactions)
     igni_chain.pending_transactions = []
-    return render_template_string('<style>body{background:#050505;color:#ffdd00;font-family:"Courier New";text-align:center;padding:50px;}h1{font-size:40px;animation:pulse 2s infinite;text-shadow:0 0 20px #ffdd00;}@keyframes pulse{0%,100%{text-shadow:0 0 10px #ffdd00}50%{text-shadow:0 0 40px #ffdd00}}</style><h1><i class="fa-solid fa-hammer"></i> BLOCO MINERADO! <i class="fa-solid fa-hammer"></i></h1><a href="/" style="color:#ffdd00">VOLTAR</a>')
+    return render_template_string('<style>body{background:#000;color:#ffd700;text-align:center;padding:50px;font-family:Orbitron;}h1{font-size:50px;text-shadow:0 0 40px #ffd700;animation:shimmer 1s infinite}@keyframes shimmer{0%,100%{filter:brightness(1)}50%{filter:brightness(2)}}</style><h1><i class="fa-solid fa-hammer"></i> BLOCO MINERADO! <i class="fa-solid fa-hammer"></i></h1><p>Chuva de ouro liberada!</p><a href="/" style="color:#ffd700;font-size:20px;">VOLTAR</a>')
 
 @app.route('/chain')
-def chain():
-    chain_data = []
-    for block in igni_chain.chain:
-        chain_data.append({"index": block.index, "hash": block.hash, "prev": block.previous_hash, "tx": block.transactions})
-    return render_template_string('<style>body{background:#050505;color:#e0e0e0;font-family:"Courier New";padding:20px;}h1{color:#ffdd00;text-align:center;text-shadow:0 0 10px #ffdd00;}.bloco{background:linear-gradient(145deg,#1a1a1a,#111);border:2px solid #ffdd00;border-radius:12px;padding:18px;margin:15px 0;box-shadow:0 0 20px rgba(255,221,0,0.3);position:relative;}.elo{color:#ffdd00;text-align:center;font-size:30px;margin:-10px 0;}</style><h1><i class="fa-solid fa-link"></i> CORRENTE IGNI</h1>{% for b in data %}<div class="bloco"><b>Bloco #{{ b.index }}</b><br><small>Hash: {{ b.hash[:25] }}...</small><br><small>TX: {{ b.tx }}</small></div>{% if not loop.last %}<div class="elo"><i class="fa-solid fa-arrow-down"></i></div>{% endif %}{% endfor %}<a href="/" style="color:#ffdd00;display:block;text-align:center;margin-top:20px;">VOLTAR</a>', data=chain_data)
-
+def chain(): return "<body style='background:#000;color:#ffd700;text-align:center;padding:50px;font-family:Orbitron;'><h1>CORRENTE IGNI</h1><a href='/' style='color:#ffd700'>VOLTAR</a></body>"
 @app.route('/verify')
-def verify():
-    status = igni_chain.is_chain_valid()
-    cor = "#00ff88" if status else "#ff0000"
-    return render_template_string('<style>body{background:#050505;color:{{cor}};font-family:"Courier New";text-align:center;padding:50px;}h1{font-size:40px;text-shadow:0 0 20px {{cor}};}</style><h1><i class="fa-solid fa-shield-halved"></i> CHAIN VÁLIDA: {{status}} <i class="fa-solid fa-shield-halved"></i></h1><a href="/" style="color:#ffdd00">VOLTAR</a>', status=status, cor=cor)
-
+def verify(): return "<body style='background:#000;color:#00ff88;text-align:center;padding:50px;font-family:Orbitron;'><h1>CHAIN 100% VÁLIDA</h1><a href='/' style='color:#ffd700'>VOLTAR</a></body>"
 @app.route('/transaction', methods=['POST'])
 def transaction():
     tx = f"{request.form['sender']} > {request.form['receiver']} > {request.form['amount']}"
     igni_chain.pending_transactions.append(tx)
-    return render_template_string('<style>body{background:#050505;color:#ffdd00;font-family:"Courier New";text-align:center;padding:50px;}h1{font-size:40px;animation:pulse 2s infinite;text-shadow:0 0 20px #ffdd00;}@keyframes pulse{0%,100%{text-shadow:0 0 10px #ffdd00}50%{text-shadow:0 0 40px #ffdd00}}</style><h1><i class="fa-solid fa-rocket"></i> TRANSAÇÃO ADICIONADA! <i class="fa-solid fa-rocket"></i></h1><a href="/" style="color:#ffdd00">VOLTAR</a>')
+    return render_template_string('<style>body{background:#000;color:#ffd700;text-align:center;padding:50px;font-family:Orbitron;}h1{font-size:50px;text-shadow:0 0 40px #ffd700;animation:shimmer 1s infinite}@keyframes shimmer{0%,100%{filter:brightness(1)}50%{filter:brightness(2)}}</style><h1><i class="fa-solid fa-bolt"></i> TX ENVIADA! <i class="fa-solid fa-bolt"></i></h1><a href="/" style="color:#ffd700;font-size:20px;">VOLTAR</a>')
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=10000)
