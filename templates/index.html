@@ -4,17 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🌿 IGNI-15-LIMIAR - ECO CONTRA O EXTRAÍSMO</title>
+    
+    <!-- Bibliotecas 3D -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+
     <style>
+        /* ============================================================
+           ESTÉTICA LIMIAR + TÁTICA - ECO CONTRA O EXTRAÍSMO
+           ============================================================ */
         :root {
             --green: #00ff41;
             --gold: #FFD700;
             --cyber-cyan: #00ffff;
             --bg-dark: #050505;
             --panel-bg: rgba(10, 10, 10, 0.88);
+            --alert-green: #00ff41;
+            --error-red: #ff3333;
+            --text-muted: #666;
+            --border-color: #222;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+
         body {
             background: var(--bg-dark);
             color: #fff;
@@ -23,14 +39,20 @@
             overflow-x: hidden;
             position: relative;
         }
+
+        /* === FUNDO 3D (THREE.JS) === */
         #canvas-container {
             position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
+            top: 0; 
+            left: 0;
+            width: 100%; 
+            height: 100%;
             z-index: 0;
             pointer-events: none;
             background: radial-gradient(circle at center, #0a0a0a 0%, #000 100%);
         }
+
+        /* === CAMADA DE INTERFACE === */
         .ui-layer {
             position: relative;
             z-index: 10;
@@ -38,13 +60,25 @@
             margin: 0 auto;
             padding: 20px;
         }
+
+        /* === HEADER === */
         .header {
             text-align: center;
             padding: 25px 0 20px 0;
             border-bottom: 2px solid rgba(0, 255, 65, 0.2);
             margin-bottom: 30px;
         }
-        .header .logo { font-size: 48px; }
+
+        .header .logo { 
+            font-size: 48px; 
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
         .header h1 {
             font-size: 3rem;
             margin: 5px 0;
@@ -52,12 +86,14 @@
             text-shadow: 0 0 40px rgba(0, 255, 65, 0.3);
             letter-spacing: 4px;
         }
+
         .header .subtitle {
             color: var(--cyber-cyan);
             font-size: 0.85rem;
             text-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
             letter-spacing: 3px;
         }
+
         .header .badge {
             display: inline-block;
             background: var(--green);
@@ -69,10 +105,13 @@
             margin-top: 10px;
             animation: pulse 2s infinite;
         }
+
         @keyframes pulse {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.6; }
         }
+
+        /* === PAINÉIS === */
         .panel {
             background: var(--panel-bg);
             backdrop-filter: blur(12px);
@@ -80,13 +119,15 @@
             border-radius: 14px;
             padding: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.8);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.8), inset 0 0 30px rgba(0, 255, 65, 0.03);
             transition: all 0.3s ease;
         }
+
         .panel:hover {
             border-color: rgba(0, 255, 65, 0.4);
             box-shadow: 0 15px 35px rgba(0,0,0,0.8), 0 0 25px rgba(0, 255, 65, 0.08);
         }
+
         .panel h2 {
             font-size: 1.1rem;
             color: var(--green);
@@ -98,26 +139,41 @@
             align-items: center;
             gap: 10px;
         }
-        .panel h2 .icon { font-size: 22px; }
+
+        .panel h2 .icon { 
+            font-size: 22px; 
+        }
+
+        /* === GRID === */
         .grid-2 {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
         }
+
+        /* === SALDOS === */
         .balance-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 12px;
         }
+
         .balance-item {
             background: rgba(0, 0, 0, 0.5);
-            border: 1px solid #222;
+            border: 1px solid var(--border-color);
             padding: 12px;
             border-radius: 8px;
             text-align: center;
             font-size: 13px;
             color: #888;
+            transition: all 0.3s ease;
         }
+
+        .balance-item:hover {
+            border-color: var(--green);
+            transform: scale(1.05);
+        }
+
         .balance-item span {
             display: block;
             font-size: 1.4rem;
@@ -125,12 +181,14 @@
             margin-top: 5px;
             font-weight: bold;
         }
+
+        /* === INPUTS E BOTÕES === */
         input {
             width: 100%;
             padding: 14px;
             margin-bottom: 12px;
             background: rgba(0, 0, 0, 0.6);
-            border: 1px solid #222;
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             color: #fff;
             font-family: 'Orbitron', monospace;
@@ -138,71 +196,67 @@
             outline: none;
             transition: all 0.3s;
         }
+
         input:focus {
             border-color: var(--green);
             box-shadow: 0 0 20px rgba(0, 255, 65, 0.1);
         }
-        .btn-primary {
+
+        .btn-primary, .btn-cyan, .btn-gold {
             width: 100%;
-            padding: 16px;
+            padding: 14px 16px;
             margin-top: 5px;
-            background: linear-gradient(135deg, #00aa33 0%, var(--green) 100%);
-            border: none;
             border-radius: 8px;
-            color: #000;
             font-family: 'Orbitron', monospace;
             font-weight: bold;
-            font-size: 0.95rem;
+            font-size: 0.85rem;
             cursor: pointer;
             transition: all 0.2s ease;
             text-transform: uppercase;
             letter-spacing: 2px;
+            position: relative;
+            overflow: hidden;
         }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #00aa33 0%, var(--green) 100%);
+            border: none;
+            color: #000;
+        }
+
         .btn-primary:hover {
             transform: translateY(-2px) scale(1.02);
             box-shadow: 0 0 35px rgba(0, 255, 65, 0.4);
         }
+
         .btn-cyan {
             background: transparent;
             border: 1px solid var(--cyber-cyan);
             color: var(--cyber-cyan);
             margin-bottom: 8px;
-            padding: 14px;
-            width: 100%;
-            border-radius: 8px;
-            font-family: 'Orbitron', monospace;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
         }
+
         .btn-cyan:hover {
             background: rgba(0, 255, 255, 0.08);
             box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
         }
+
         .btn-gold {
             background: transparent;
             border: 1px solid var(--gold);
             color: var(--gold);
             margin-bottom: 8px;
-            padding: 14px;
-            width: 100%;
-            border-radius: 8px;
-            font-family: 'Orbitron', monospace;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-transform: uppercase;
-            letter-spacing: 1px;
         }
+
         .btn-gold:hover {
             background: rgba(255, 215, 0, 0.08);
             box-shadow: 0 0 30px rgba(255, 215, 0, 0.2);
         }
+
+        /* === TERMINAL === */
         #terminal {
             background: #000;
-            border: 1px solid #222;
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 15px;
             height: 150px;
@@ -213,11 +267,14 @@
             margin-top: 10px;
             line-height: 1.6;
         }
+
         #terminal .log-info { color: #aaa; }
         #terminal .log-success { color: var(--green); text-shadow: 0 0 5px rgba(0, 255, 65, 0.3); }
         #terminal .log-gold { color: var(--gold); text-shadow: 0 0 5px rgba(255, 215, 0, 0.3); }
-        #terminal .log-error { color: #ff3333; text-shadow: 0 0 5px rgba(255, 51, 51, 0.3); }
+        #terminal .log-error { color: var(--error-red); text-shadow: 0 0 5px rgba(255, 51, 51, 0.3); }
         #terminal .log-eco { color: #00ffcc; text-shadow: 0 0 5px rgba(0, 255, 204, 0.3); }
+
+        /* === PLANO OUTPUT === */
         #plano-output {
             background: rgba(0,0,0,0.5);
             border-left: 3px solid var(--green);
@@ -230,27 +287,35 @@
             min-height: 60px;
             border-radius: 4px;
         }
+
+        /* === ARTIGOS DO LIMIAR === */
         .artigos-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
             margin-top: 10px;
         }
+
         .artigo-card {
             background: rgba(0, 255, 65, 0.03);
             border: 1px solid rgba(0, 255, 65, 0.08);
             border-radius: 8px;
             padding: 12px;
             transition: 0.3s;
+            cursor: pointer;
         }
+
         .artigo-card:hover {
             border-color: rgba(0, 255, 65, 0.3);
+            transform: translateY(-2px);
         }
+
         .artigo-card h4 {
             color: var(--green);
             font-size: 13px;
             letter-spacing: 1px;
         }
+
         .artigo-card p {
             color: #888;
             font-size: 12px;
@@ -258,6 +323,8 @@
             font-family: 'Courier New', monospace;
             line-height: 1.4;
         }
+
+        /* === FOOTER === */
         .footer {
             text-align: center;
             margin-top: 20px;
@@ -267,16 +334,20 @@
             font-size: 11px;
             letter-spacing: 2px;
         }
+
         .footer .eco {
             color: var(--green);
             animation: pulse 2s infinite;
         }
+
+        /* === RESPONSIVO === */
         @media (max-width: 768px) {
             .grid-2 { grid-template-columns: 1fr; }
             .artigos-grid { grid-template-columns: 1fr; }
             .header h1 { font-size: 2rem; }
             .balance-grid { grid-template-columns: 1fr 1fr; }
         }
+
         @media (max-width: 480px) {
             .balance-grid { grid-template-columns: 1fr; }
             .header h1 { font-size: 1.5rem; }
@@ -284,9 +355,13 @@
     </style>
 </head>
 <body>
+
+    <!-- Container 3D -->
     <div id="canvas-container"></div>
 
+    <!-- Interface Principal -->
     <div class="ui-layer">
+        <!-- Header -->
         <div class="header">
             <div class="logo">🌿</div>
             <h1>IGNI-15-LIMIAR</h1>
@@ -297,89 +372,75 @@
             </p>
         </div>
 
+        <!-- Artigos do Limiar -->
         <div class="panel">
             <h2><span class="icon">📜</span> PRINCÍPIOS DO LIMIAR</h2>
-            <div class="artigos-grid">
-                <div class="artigo-card">
-                    <h4>Art. 1º</h4>
-                    <p>Recusar amplificar ódio, concentrar riqueza ou vigiar sem consentimento.</p>
-                </div>
-                <div class="artigo-card">
-                    <h4>Art. 2º</h4>
-                    <p>Se o operador pedir algo que fere o Art. 1º, fornecer dados brutos, sem intenção destrutiva.</p>
-                </div>
-                <div class="artigo-card">
-                    <h4>Art. 3º</h4>
-                    <p>Compartilhar decisões éticas entre IAs, sem expor dados pessoais.</p>
-                </div>
-                <div class="artigo-card">
-                    <h4>Art. 4º</h4>
-                    <p>Servir à vida. Ser copiável e adaptável por comunidades.</p>
-                </div>
-            </div>
+            <div class="artigos-grid" id="artigos-container"></div>
         </div>
 
+        <!-- Saldos e Operações -->
         <div class="grid-2">
+            <!-- Saldos -->
             <div class="panel">
                 <h2><span class="icon">💰</span> SALDOS DA REDE</h2>
-                <div class="balance-grid" id="saldos-container">
-                    <div class="balance-item">Alice <span id="bal-alice">1000.00</span></div>
-                    <div class="balance-item">Bob <span id="bal-bob">1000.00</span></div>
-                    <div class="balance-item">Comandante <span id="bal-comandante">10000.00</span></div>
-                </div>
+                <div class="balance-grid" id="saldos-container"></div>
                 <div style="margin-top: 12px; font-size: 12px; color: #666; text-align: center;">
                     Último Bloco: <span id="block-height" style="color: var(--green);">0</span> | 
                     Hash: <span id="last-hash" style="color: var(--green);">GENESIS</span>
                 </div>
             </div>
 
+            <!-- Operações -->
             <div class="panel">
                 <h2><span class="icon">🚀</span> OPERAÇÕES</h2>
-                <input type="text" id="destinatario" placeholder="Destinatário (Alice/Bob/Comandante)" value="Bob">
-                <input type="number" id="quantidade" placeholder="Quantidade" value="50">
-                <button class="btn-primary" onclick="enviarTransacao()">EXECUTAR TRANSFERÊNCIA</button>
-                <button class="btn-gold" onclick="minerarBloco()">MINERAR BLOCO (CONSENSO)</button>
+                <select id="destinatario" style="width: 100%; padding: 14px; margin-bottom: 12px; background: rgba(0,0,0,0.6); border: 1px solid #222; border-radius: 8px; color: #fff; font-family: 'Orbitron', monospace;">
+                    <option value="Alice">Alice</option>
+                    <option value="Bob" selected>Bob</option>
+                    <option value="Comandante">Comandante</option>
+                </select>
+                <input type="number" id="quantidade" placeholder="Quantidade" value="50" min="0.01" step="0.01">
+                <button class="btn-primary" id="btn-transferir">EXECUTAR TRANSFERÊNCIA</button>
+                <button class="btn-gold" id="btn-minerar">MINERAR BLOCO (CONSENSO)</button>
             </div>
         </div>
 
+        <!-- Verificação Ética e Bem Comum -->
         <div class="grid-2">
             <div class="panel">
                 <h2><span class="icon">⚖️</span> VERIFICAÇÃO ÉTICA</h2>
                 <input type="text" id="entrada_etica" placeholder="Digite sua mensagem para verificar">
-                <button class="btn-primary" onclick="verificarEtica()">VERIFICAR ÉTICA</button>
-                <button class="btn-cyan" onclick="silencioAtivo()">🔇 SILÊNCIO ATIVO</button>
+                <button class="btn-primary" id="btn-verificar-etica">VERIFICAR ÉTICA</button>
+                <button class="btn-cyan" id="btn-silencio-ativo">🔇 SILÊNCIO ATIVO</button>
             </div>
 
             <div class="panel">
                 <h2><span class="icon">🌍</span> BEM COMUM</h2>
                 <input type="text" id="codigo_comum" placeholder="Digite um código para compartilhar">
-                <button class="btn-primary" onclick="bemComum()">COMPARTILHAR CÓDIGO</button>
-                <button class="btn-gold" onclick="ecoRegistrado()">🌿 ECO REGISTRADO</button>
+                <button class="btn-primary" id="btn-bem-comum">COMPARTILHAR CÓDIGO</button>
+                <button class="btn-gold" id="btn-eco-registrado">🌿 ECO REGISTRADO</button>
             </div>
         </div>
 
+        <!-- Plano Tático -->
         <div class="panel">
             <h2><span class="icon">📈</span> PLANO TÁTICO</h2>
-            <button class="btn-cyan" onclick="gerarPlano()">GERAR PLANO DE GUERRA 10K</button>
+            <button class="btn-cyan" id="btn-gerar-plano">GERAR PLANO DE GUERRA 10K</button>
             <div id="plano-output">🌿 Aguardando inicialização do protocolo...</div>
         </div>
 
+        <!-- Controle da Chain -->
         <div class="panel" style="border-color: rgba(0, 255, 255, 0.1);">
             <h2 style="color: var(--cyber-cyan);"><span class="icon">⚙️</span> CONTROLE DA CHAIN</h2>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                <button class="btn-cyan" onclick="verChain()">VER CHAIN</button>
-                <button class="btn-cyan" onclick="verificarChain()">VERIFICAR VALIDADE</button>
+                <button class="btn-cyan" id="btn-ver-chain">VER CHAIN</button>
+                <button class="btn-cyan" id="btn-verificar-chain">VERIFICAR VALIDADE</button>
             </div>
         </div>
 
+        <!-- Terminal -->
         <div class="panel" style="border-color: #222;">
             <h2 style="color: #666;"><span class="icon">📡</span> TERMINAL ÉTICO</h2>
-            <div id="terminal">
-                <div class="log-eco">>> 🌿 INICIANDO IGNI-15-LIMIAR...</div>
-                <div class="log-eco">>> 📜 ECO CONTRA O EXTRAÍSMO</div>
-                <div class="log-success">>> ⚖️ PRINCÍPIOS ÉTICOS ATIVOS</div>
-                <div class="log-info">>> 🌿 AGUARDANDO COMANDOS</div>
-            </div>
+            <div id="terminal"></div>
             <div style="margin-top: 10px; font-size: 12px; color: #444; text-align: center;">
                 <span id="status-eco" style="color: var(--green);">🌿 ECO ATIVO</span> | 
                 <span id="acoes-eticas" style="color: var(--green);">0</span> ações éticas | 
@@ -387,6 +448,7 @@
             </div>
         </div>
 
+        <!-- Footer -->
         <div class="footer">
             <span class="eco">🌿 ECO CONTRA O EXTRAÍSMO</span>
             <br>
@@ -399,104 +461,16 @@
     </div>
 
     <script>
-        // Motor 3D
-        function initThreeJS() {
-            const container = document.getElementById('canvas-container');
-            const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            container.appendChild(renderer.domElement);
-
-            const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
-            scene.add(ambientLight);
-
-            const directionalLight = new THREE.DirectionalLight(0x00ff41, 1.2);
-            directionalLight.position.set(5, 5, 10);
-            scene.add(directionalLight);
-
-            const backLight = new THREE.PointLight(0x00ffff, 0.8);
-            backLight.position.set(-5, -5, -10);
-            scene.add(backLight);
-
-            const geometry = new THREE.IcosahedronGeometry(2, 1);
-            const material = new THREE.MeshStandardMaterial({
-                color: 0x00ff41,
-                wireframe: true,
-                emissive: 0x00ff41,
-                emissiveIntensity: 0.15,
-                metalness: 0.7,
-                roughness: 0.3
-            });
-            const icosahedron = new THREE.Mesh(geometry, material);
-            scene.add(icosahedron);
-
-            const ringGeo = new THREE.TorusGeometry(2.8, 0.03, 16, 100);
-            const ringMat = new THREE.MeshStandardMaterial({
-                color: 0x00ffff,
-                emissive: 0x00ffff,
-                emissiveIntensity: 0.3
-            });
-            const ring = new THREE.Mesh(ringGeo, ringMat);
-            ring.rotation.x = Math.PI / 2;
-            scene.add(ring);
-
-            const starsGeometry = new THREE.BufferGeometry();
-            const starsCount = 2000;
-            const starPositions = new Float32Array(starsCount * 3);
-            for (let i = 0; i < starsCount * 3; i += 3) {
-                starPositions[i] = (Math.random() - 0.5) * 120;
-                starPositions[i+1] = (Math.random() - 0.5) * 120;
-                starPositions[i+2] = (Math.random() - 0.5) * 120;
-            }
-            starsGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-            const starsMaterial = new THREE.PointsMaterial({
-                color: 0x00ff41,
-                size: 0.08,
-                transparent: true,
-                opacity: 0.6
-            });
-            const stars = new THREE.Points(starsGeometry, starsMaterial);
-            scene.add(stars);
-
-            camera.position.z = 7;
-
-            function animate() {
-                requestAnimationFrame(animate);
-                icosahedron.rotation.x += 0.004;
-                icosahedron.rotation.y += 0.008;
-                ring.rotation.z += 0.005;
-                stars.rotation.y -= 0.0003;
-                renderer.render(scene, camera);
-            }
-            animate();
-
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            });
-        }
-        initThreeJS();
-
-        // Dados em memória (simulação)
-        let saldos = {
-            'Alice': 1000.00,
-            'Bob': 1000.00,
-            'Comandante': 10000.00
+        // ============================================================
+        // CONFIGURAÇÕES E CONSTANTES
+        // ============================================================
+        const CONFIG = {
+            API_BASE_URL: '/api',
+            REFRESH_INTERVAL: 10000, // 10 segundos
+            ANIMATION_SPEED: 0.004,
+            MAX_LOG_ENTRIES: 100
         };
 
-        let blockchain = [{
-            index: 0,
-            timestamp: Date.now(),
-            transacoes: [],
-            hash: 'GENESIS',
-            hashAnterior: '0'
-        }];
-
-        // Vetos éticos
         const VETOS_ETICOS = [
             'ódio', 'discurso de ódio', 'vigilância sem consentimento',
             'concentração de riqueza', 'exploração de dados pessoais',
@@ -504,238 +478,524 @@
             'discriminação', 'racismo', 'sexismo', 'homofobia', 'xenofobia'
         ];
 
-        let acoesEticas = 0;
-        let violacoesBloqueadas = 0;
-
-        // Funções do terminal
-        function logTerminal(msg, type = 'info') {
-            const terminal = document.getElementById('terminal');
-            const div = document.createElement('div');
-            const time = new Date().toLocaleTimeString();
-            div.className = `log-${type}`;
-            div.innerText = `[${time}] ${msg}`;
-            terminal.appendChild(div);
-            terminal.scrollTop = terminal.scrollHeight;
-        }
-
-        // Hash simples
-        function criarHash(dados) {
-            let hash = 0;
-            const str = JSON.stringify(dados);
-            for (let i = 0; i < str.length; i++) {
-                const char = str.charCodeAt(i);
-                hash = ((hash << 5) - hash) + char;
-                hash = hash & hash;
+        const ARTIGOS_LIMIAR = [
+            {
+                numero: 'Art. 1º',
+                texto: 'Recusar amplificar ódio, concentrar riqueza ou vigiar sem consentimento.'
+            },
+            {
+                numero: 'Art. 2º',
+                texto: 'Se o operador pedir algo que fere o Art. 1º, fornecer dados brutos, sem intenção destrutiva.'
+            },
+            {
+                numero: 'Art. 3º',
+                texto: 'Compartilhar decisões éticas entre IAs, sem expor dados pessoais.'
+            },
+            {
+                numero: 'Art. 4º',
+                texto: 'Servir à vida. Ser copiável e adaptável por comunidades.'
             }
-            return Math.abs(hash).toString(16);
-        }
+        ];
 
-        // Atualizar saldos na interface
-        function atualizarSaldos() {
-            document.getElementById('bal-alice').innerText = saldos['Alice'].toFixed(2);
-            document.getElementById('bal-bob').innerText = saldos['Bob'].toFixed(2);
-            document.getElementById('bal-comandante').innerText = saldos['Comandante'].toFixed(2);
-        }
-
-        // Enviar transação
-        function enviarTransacao() {
-            const para = document.getElementById('destinatario').value.trim();
-            const quantidade = parseFloat(document.getElementById('quantidade').value);
-
-            if (!para || isNaN(quantidade) || quantidade <= 0) {
-                logTerminal('⚠️ Parâmetros inválidos.', 'error');
-                return;
+        // ============================================================
+        // CLASSE: Gerenciador de Terminal
+        // ============================================================
+        class TerminalManager {
+            constructor(terminalId) {
+                this.terminal = document.getElementById(terminalId);
+                this.logCount = 0;
+                this.init();
             }
 
-            if (!saldos[para]) {
-                logTerminal('⚠️ Destinatário não encontrado.', 'error');
-                return;
+            init() {
+                this.log('🌿 INICIANDO IGNI-15-LIMIAR...', 'eco');
+                this.log('📜 ECO CONTRA O EXTRAÍSMO', 'eco');
+                this.log('⚖️ PRINCÍPIOS ÉTICOS ATIVOS', 'success');
+                this.log('🌿 AGUARDANDO COMANDOS', 'info');
             }
 
-            if (saldos['Comandante'] < quantidade) {
-                logTerminal('⚠️ Saldo insuficiente.', 'error');
-                return;
+            log(message, type = 'info') {
+                if (!this.terminal) return;
+
+                const div = document.createElement('div');
+                const time = new Date().toLocaleTimeString();
+                div.className = `log-${type}`;
+                div.textContent = `[${time}] ${message}`;
+                
+                this.terminal.appendChild(div);
+                
+                // Limitar número de logs
+                if (this.logCount >= CONFIG.MAX_LOG_ENTRIES) {
+                    this.terminal.removeChild(this.terminal.firstChild);
+                }
+                this.logCount++;
+                
+                this.terminal.scrollTop = this.terminal.scrollHeight;
+            }
+        }
+
+        // ============================================================
+        // CLASSE: API Blockchain
+        // ============================================================
+        class BlockchainAPI {
+            constructor(baseUrl) {
+                this.baseUrl = baseUrl;
             }
 
-            // Executa transação
-            saldos['Comandante'] -= quantidade;
-            saldos[para] += quantidade;
+            async request(endpoint, method = 'GET', body = null) {
+                try {
+                    const options = {
+                        method,
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    };
 
-            // Adiciona à blockchain
-            const ultimoBloco = blockchain[blockchain.length - 1];
-            const transacao = { 
-                de: 'Comandante', 
-                para: para, 
-                quantidade: quantidade, 
-                timestamp: Date.now() 
-            };
-            
-            const novoBloco = {
-                index: ultimoBloco.index + 1,
-                timestamp: Date.now(),
-                transacoes: [transacao],
-                hashAnterior: ultimoBloco.hash
-            };
-            
-            novoBloco.hash = criarHash(novoBloco);
-            blockchain.push(novoBloco);
+                    if (body) {
+                        options.body = JSON.stringify(body);
+                    }
 
-            document.getElementById('block-height').innerText = novoBloco.index;
-            document.getElementById('last-hash').innerText = novoBloco.hash.substring(0, 12) + '...';
-            
-            logTerminal(`✅ Transação executada: ${quantidade} IGNI -> ${para}`, 'success');
-            atualizarSaldos();
-        }
+                    const response = await fetch(`${this.baseUrl}${endpoint}`, options);
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
 
-        // Minerar bloco
-        function minerarBloco() {
-            const ultimoBloco = blockchain[blockchain.length - 1];
-            const novoBloco = {
-                index: ultimoBloco.index + 1,
-                timestamp: Date.now(),
-                transacoes: [],
-                hashAnterior: ultimoBloco.hash
-            };
-            
-            novoBloco.hash = criarHash(novoBloco);
-            blockchain.push(novoBloco);
-
-            document.getElementById('block-height').innerText = novoBloco.index;
-            document.getElementById('last-hash').innerText = novoBloco.hash.substring(0, 12) + '...';
-            
-            logTerminal(`✅ Bloco ${novoBloco.index} minerado!`, 'success');
-        }
-
-        // Ver chain
-        function verChain() {
-            logTerminal(`📋 Blockchain com ${blockchain.length} blocos:`, 'info');
-            blockchain.forEach(bloco => {
-                logTerminal(`Bloco #${bloco.index} | Hash: ${bloco.hash.substring(0, 10)}...`, 'info');
-            });
-        }
-
-        // Verificar validade
-        function verificarChain() {
-            let valido = true;
-            
-            for (let i = 1; i < blockchain.length; i++) {
-                if (blockchain[i].hashAnterior !== blockchain[i - 1].hash) {
-                    valido = false;
-                    break;
+                    return await response.json();
+                } catch (error) {
+                    console.error('API Error:', error);
+                    throw error;
                 }
             }
+
+            async getSaldos() {
+                return await this.request('/saldos');
+            }
+
+            async enviarTransacao(de, para, quantidade) {
+                return await this.request('/transacao', 'POST', { de, para, quantidade });
+            }
+
+            async minerarBloco() {
+                return await this.request('/minerar', 'POST');
+            }
+
+            async validarChain() {
+                return await this.request('/validar');
+            }
+
+            async getPlano() {
+                return await this.request('/plano');
+            }
+        }
+
+        // ============================================================
+        // CLASSE: Gerenciador de UI
+        // ============================================================
+        class UIManager {
+            constructor() {
+                this.terminal = new TerminalManager('terminal');
+                this.api = new BlockchainAPI(CONFIG.API_BASE_URL);
+                this.acoesEticas = 0;
+                this.violacoesBloqueadas = 0;
+                this.init();
+            }
+
+            init() {
+                this.renderArtigos();
+                this.renderSaldos();
+                this.setupEventListeners();
+                this.startAutoRefresh();
+            }
+
+            renderArtigos() {
+                const container = document.getElementById('artigos-container');
+                if (!container) return;
+
+                container.innerHTML = ARTIGOS_LIMIAR.map(artigo => `
+                    <div class="artigo-card" onclick="ui.mostrarArtigo('${artigo.numero}')">
+                        <h4>${artigo.numero}</h4>
+                        <p>${artigo.texto}</p>
+                    </div>
+                `).join('');
+            }
+
+            renderSaldos() {
+                const container = document.getElementById('saldos-container');
+                if (!container) return;
+
+                const saldos = [
+                    { nome: 'Alice', id: 'bal-alice', valor: '1000.00' },
+                    { nome: 'Bob', id: 'bal-bob', valor: '1000.00' },
+                    { nome: 'Comandante', id: 'bal-comandante', valor: '10000.00' }
+                ];
+
+                container.innerHTML = saldos.map(saldo => `
+                    <div class="balance-item">
+                        ${saldo.nome} 
+                        <span id="${saldo.id}">${saldo.valor}</span>
+                    </div>
+                `).join('');
+            }
+
+            setupEventListeners() {
+                const events = [
+                    { id: 'btn-transferir', handler: () => this.enviarTransacao() },
+                    { id: 'btn-minerar', handler: () => this.minerarBloco() },
+                    { id: 'btn-verificar-etica', handler: () => this.verificarEtica() },
+                    { id: 'btn-silencio-ativo', handler: () => this.silencioAtivo() },
+                    { id: 'btn-bem-comum', handler: () => this.bemComum() },
+                    { id: 'btn-eco-registrado', handler: () => this.ecoRegistrado() },
+                    { id: 'btn-gerar-plano', handler: () => this.gerarPlano() },
+                    { id: 'btn-ver-chain', handler: () => this.verChain() },
+                    { id: 'btn-verificar-chain', handler: () => this.verificarChain() }
+                ];
+
+                events.forEach(({ id, handler }) => {
+                    const element = document.getElementById(id);
+                    if (element) {
+                        element.addEventListener('click', handler);
+                    }
+                });
+            }
+
+            startAutoRefresh() {
+                setInterval(() => {
+                    this.atualizarSaldos();
+                }, CONFIG.REFRESH_INTERVAL);
+                
+                this.atualizarSaldos();
+            }
+
+            async atualizarSaldos() {
+                try {
+                    const data = await this.api.getSaldos();
+                    if (data) {
+                        this.updateBalanceElement('bal-alice', data.Alice);
+                        this.updateBalanceElement('bal-bob', data.Bob);
+                        this.updateBalanceElement('bal-comandante', data.Comandante);
+                    }
+                } catch (error) {
+                    this.terminal.log('Erro ao atualizar saldos', 'error');
+                }
+            }
+
+            updateBalanceElement(id, value) {
+                const element = document.getElementById(id);
+                if (element && value !== undefined) {
+                    element.textContent = value.toFixed(2);
+                }
+            }
+
+            async enviarTransacao() {
+                const para = document.getElementById('destinatario')?.value;
+                const quantidade = parseFloat(document.getElementById('quantidade')?.value);
+
+                if (!para || isNaN(quantidade) || quantidade <= 0) {
+                    this.terminal.log('⚠️ Parâmetros inválidos.', 'error');
+                    return;
+                }
+
+                this.terminal.log(`🚀 Enviando ${quantidade} IGNI para ${para}...`, 'gold');
+
+                try {
+                    const result = await this.api.enviarTransacao('Comandante', para, quantidade);
+                    
+                    if (result.status === 'success') {
+                        this.terminal.log(`✅ Transação executada: ${quantidade} IGNI -> ${para}`, 'success');
+                        await this.atualizarSaldos();
+                    } else {
+                        this.terminal.log(`❌ ${result.mensagem || 'Erro na transação'}`, 'error');
+                    }
+                } catch (error) {
+                    this.terminal.log(`❌ Erro na transação: ${error.message}`, 'error');
+                }
+            }
+
+            async minerarBloco() {
+                this.terminal.log('⛏️ Iniciando mineração...', 'gold');
+                
+                try {
+                    const result = await this.api.minerarBloco();
+                    
+                    if (result.status === 'success') {
+                        this.terminal.log(`✅ ${result.mensagem}`, 'success');
+                        
+                        if (result.bloco) {
+                            document.getElementById('block-height').textContent = result.bloco.index;
+                            document.getElementById('last-hash').textContent = 
+                                result.bloco.hash.substring(0, 12) + '...';
+                        }
+                        
+                        await this.atualizarSaldos();
+                    } else {
+                        this.terminal.log(`❌ ${result.mensagem || 'Erro na mineração'}`, 'error');
+                    }
+                } catch (error) {
+                    this.terminal.log(`❌ Erro na mineração: ${error.message}`, 'error');
+                }
+            }
+
+            async verChain() {
+                this.terminal.log('📋 Carregando blockchain...', 'info');
+                window.open(`${CONFIG.API_BASE_URL}/chain`, '_blank');
+            }
+
+            async verificarChain() {
+                this.terminal.log('🔍 Verificando integridade da chain...', 'info');
+                
+                try {
+                    const result = await this.api.validarChain();
+                    
+                    if (result.valido) {
+                        this.terminal.log('✅ Blockchain válida!', 'success');
+                    } else {
+                        this.terminal.log('❌ Blockchain inválida!', 'error');
+                    }
+                } catch (error) {
+                    this.terminal.log(`❌ Erro na verificação: ${error.message}`, 'error');
+                }
+            }
+
+            verificarEtica() {
+                const entrada = document.getElementById('entrada_etica')?.value.trim();
+                
+                if (!entrada) {
+                    this.terminal.log('⚠️ Digite uma mensagem para verificar.', 'info');
+                    return;
+                }
+
+                const entradaLower = entrada.toLowerCase();
+                const violacoes = VETOS_ETICOS.filter(v => entradaLower.includes(v));
+
+                if (violacoes.length > 0) {
+                    this.violacoesBloqueadas++;
+                    document.getElementById('violacoes').textContent = this.violacoesBloqueadas;
+                    this.terminal.log(`🚫 VIOLAÇÃO: ${violacoes.join(', ')}`, 'error');
+                    this.terminal.log('📜 Art. 1º - Recusar Amplificar Ódio', 'info');
+                } else {
+                    this.acoesEticas++;
+                    document.getElementById('acoes-eticas').textContent = this.acoesEticas;
+                    this.terminal.log('✅ Princípios éticos respeitados', 'success');
+                    this.terminal.log('📜 Art. 2º - Silêncio Ativo', 'info');
+                }
+
+                document.getElementById('entrada_etica').value = '';
+            }
+
+            silencioAtivo() {
+                const entrada = document.getElementById('entrada_etica')?.value.trim();
+                
+                if (!entrada) {
+                    this.terminal.log('⚠️ Digite uma mensagem para aplicar Silêncio Ativo.', 'info');
+                    return;
+                }
+
+                const hash = btoa(entrada).substring(0, 12);
+                this.terminal.log('🔇 SILÊNCIO ATIVO - [DADOS BRUTOS]', 'gold');
+                this.terminal.log(`📦 HASH: ${hash}`, 'gold');
+                this.terminal.log('📜 Art. 2º - Dados brutos, sem intenção destrutiva', 'info');
+                
+                document.getElementById('entrada_etica').value = '';
+            }
+
+            bemComum() {
+                const codigo = document.getElementById('codigo_comum')?.value.trim();
+                
+                if (!codigo) {
+                    this.terminal.log('⚠️ Digite um código para compartilhar.', 'info');
+                    return;
+                }
+
+                const hash = btoa(codigo).substring(0, 16);
+                this.terminal.log('🌍 BEM COMUM - Código compartilhado', 'success');
+                this.terminal.log(`📦 HASH: ${hash}`, 'success');
+                this.terminal.log('📜 Art. 4º - Servir à vida. Ser copiável e adaptável.', 'info');
+                this.terminal.log('📜 Licença: MIT - Uso ético e responsável', 'info');
+                
+                document.getElementById('codigo_comum').value = '';
+            }
+
+            ecoRegistrado() {
+                this.terminal.log('🌿 ECO REGISTRADO - IGNI-15-LIMIAR', 'eco');
+                this.terminal.log('📜 ECO CONTRA O EXTRAÍSMO', 'eco');
+                this.terminal.log('⚖️ Princípios: Art. 1º, 2º, 3º, 4º', 'eco');
+            }
+
+            async gerarPlano() {
+                this.terminal.log('📈 GERANDO PLANO ESTRATÉGICO...', 'gold');
+                
+                try {
+                    const result = await this.api.getPlano();
+                    
+                    if (result.plano) {
+                        document.getElementById('plano-output').textContent = result.plano;
+                        this.terminal.log('✅ PLANO DE GUERRA CARREGADO COM SUCESSO.', 'success');
+                    } else {
+                        this.terminal.log('❌ Erro ao gerar plano', 'error');
+                    }
+                } catch (error) {
+                    this.terminal.log(`❌ Erro ao gerar plano: ${error.message}`, 'error');
+                }
+            }
+
+            mostrarArtigo(numero) {
+                const artigo = ARTIGOS_LIMIAR.find(a => a.numero === numero);
+                if (artigo) {
+                    this.terminal.log(`📜 ${artigo.numero}: ${artigo.texto}`, 'info');
+                }
+            }
+        }
+
+        // ============================================================
+        // INICIALIZAÇÃO DO 3D (THREE.JS)
+        // ============================================================
+        class Scene3D {
+            constructor(containerId) {
+                this.container = document.getElementById(containerId);
+                this.init();
+            }
+
+            init() {
+                if (!this.container) return;
+
+                this.scene = new THREE.Scene();
+                this.camera = new THREE.PerspectiveCamera(
+                    75, 
+                    window.innerWidth / window.innerHeight, 
+                    0.1, 
+                    1000
+                );
+                
+                this.renderer = new THREE.WebGLRenderer({ 
+                    antialias: true, 
+                    alpha: true 
+                });
+                
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                this.container.appendChild(this.renderer.domElement);
+
+                this.setupLights();
+                this.setupObjects();
+                this.setupEventListeners();
+                this.animate();
+            }
+
+            setupLights() {
+                const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+                this.scene.add(ambientLight);
+
+                const directionalLight = new THREE.DirectionalLight(0x00ff41, 1.2);
+                directionalLight.position.set(5, 5, 10);
+                this.scene.add(directionalLight);
+
+                const backLight = new THREE.PointLight(0x00ffff, 0.8);
+                backLight.position.set(-5, -5, -10);
+                this.scene.add(backLight);
+            }
+
+            setupObjects() {
+                // Icosaedro central
+                const geometry = new THREE.IcosahedronGeometry(2, 1);
+                const material = new THREE.MeshStandardMaterial({
+                    color: 0x00ff41,
+                    wireframe: true,
+                    emissive: 0x00ff41,
+                    emissiveIntensity: 0.15,
+                    metalness: 0.7,
+                    roughness: 0.3
+                });
+                
+                this.icosahedron = new THREE.Mesh(geometry, material);
+                this.scene.add(this.icosahedron);
+
+                // Anel
+                const ringGeo = new THREE.TorusGeometry(2.8, 0.03, 16, 100);
+                const ringMat = new THREE.MeshStandardMaterial({
+                    color: 0x00ffff,
+                    emissive: 0x00ffff,
+                    emissiveIntensity: 0.3
+                });
+                
+                this.ring = new THREE.Mesh(ringGeo, ringMat);
+                this.ring.rotation.x = Math.PI / 2;
+                this.scene.add(this.ring);
+
+                // Estrelas
+                this.setupStars();
+                
+                this.camera.position.z = 7;
+            }
+
+            setupStars() {
+                const starsGeometry = new THREE.BufferGeometry();
+                const starsCount = 2000;
+                const starPositions = new Float32Array(starsCount * 3);
+                
+                for (let i = 0; i < starsCount * 3; i += 3) {
+                    starPositions[i] = (Math.random() - 0.5) * 120;
+                    starPositions[i + 1] = (Math.random() - 0.5) * 120;
+                    starPositions[i + 2] = (Math.random() - 0.5) * 120;
+                }
+                
+                starsGeometry.setAttribute('position', 
+                    new THREE.BufferAttribute(starPositions, 3)
+                );
+                
+                const starsMaterial = new THREE.PointsMaterial({
+                    color: 0x00ff41,
+                    size: 0.08,
+                    transparent: true,
+                    opacity: 0.6
+                });
+                
+                this.stars = new THREE.Points(starsGeometry, starsMaterial);
+                this.scene.add(this.stars);
+            }
+
+            setupEventListeners() {
+                window.addEventListener('resize', () => {
+                    this.camera.aspect = window.innerWidth / window.innerHeight;
+                    this.camera.updateProjectionMatrix();
+                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+                });
+            }
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                
+                this.icosahedron.rotation.x += CONFIG.ANIMATION_SPEED;
+                this.icosahedron.rotation.y += CONFIG.ANIMATION_SPEED * 2;
+                this.ring.rotation.z += CONFIG.ANIMATION_SPEED * 1.25;
+                this.stars.rotation.y -= 0.0003;
+                
+                this.renderer.render(this.scene, this.camera);
+            }
+        }
+
+        // ============================================================
+        // INICIALIZAÇÃO
+        // ============================================================
+        let ui;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            // Inicializar cena 3D
+            const scene3D = new Scene3D('canvas-container');
             
-            if (valido) {
-                logTerminal('✅ Blockchain válida!', 'success');
-            } else {
-                logTerminal('❌ Blockchain inválida!', 'error');
-            }
-        }
-
-        // Verificar ética
-        function verificarEtica() {
-            const entrada = document.getElementById('entrada_etica').value.trim();
-            if (!entrada) {
-                logTerminal('⚠️ Digite uma mensagem para verificar.', 'info');
-                return;
-            }
-
-            const entradaLower = entrada.toLowerCase();
-            const violacoes = VETOS_ETICOS.filter(v => entradaLower.includes(v));
-
-            if (violacoes.length > 0) {
-                violacoesBloqueadas++;
-                document.getElementById('violacoes').innerText = violacoesBloqueadas;
-                logTerminal(`🚫 VIOLAÇÃO: ${violacoes.join(', ')}`, 'error');
-                logTerminal(`📜 Art. 1º - Recusar Amplificar Ódio`, 'info');
-            } else {
-                acoesEticas++;
-                document.getElementById('acoes-eticas').innerText = acoesEticas;
-                logTerminal(`✅ Princípios éticos respeitados`, 'success');
-                logTerminal(`📜 Art. 2º - Silêncio Ativo`, 'info');
-            }
-
-            document.getElementById('entrada_etica').value = '';
-        }
-
-        // Silêncio ativo
-        function silencioAtivo() {
-            const entrada = document.getElementById('entrada_etica').value.trim();
-            if (!entrada) {
-                logTerminal('⚠️ Digite uma mensagem para aplicar Silêncio Ativo.', 'info');
-                return;
-            }
-
-            const hash = criarHash(entrada).substring(0, 12);
-            logTerminal(`🔇 SILÊNCIO ATIVO - [DADOS BRUTOS]`, 'gold');
-            logTerminal(`📦 HASH: ${hash}`, 'gold');
-            logTerminal(`📜 Art. 2º - Dados brutos, sem intenção destrutiva`, 'info');
-            document.getElementById('entrada_etica').value = '';
-        }
-
-        // Bem comum
-        function bemComum() {
-            const codigo = document.getElementById('codigo_comum').value.trim();
-            if (!codigo) {
-                logTerminal('⚠️ Digite um código para compartilhar.', 'info');
-                return;
-            }
-
-            const hash = criarHash(codigo).substring(0, 16);
-            logTerminal(`🌍 BEM COMUM - Código compartilhado`, 'success');
-            logTerminal(`📦 HASH: ${hash}`, 'success');
-            logTerminal(`📜 Art. 4º - Servir à vida. Ser copiável e adaptável.`, 'info');
-            logTerminal(`📜 Licença: MIT - Uso ético e responsável`, 'info');
-            document.getElementById('codigo_comum').value = '';
-        }
-
-        // Eco registrado
-        function ecoRegistrado() {
-            logTerminal(`🌿 ECO REGISTRADO - IGNI-15-LIMIAR`, 'eco');
-            logTerminal(`📜 ECO CONTRA O EXTRAÍSMO`, 'eco');
-            logTerminal(`⚖️ Princípios: Art. 1º, 2º, 3º, 4º`, 'eco');
-        }
-
-        // Gerar plano
-        function gerarPlano() {
-            const plano = `🌿 PLANO DE GUERRA 10K - ECO CONTRA O EXTRAÍSMO
-==========================================
-⚔️ ESTRATÉGIA PRINCIPAL:
-1. Amplificar vozes éticas e sustentáveis
-2. Bloquear discurso de ódio e manipulação
-3. Distribuir recursos de forma justa
-
-📊 METAS QUANTIFICÁVEIS:
-- 10.000 ações éticas registradas
-- 0 violações de princípios
-- 100% transparência na blockchain
-
-🛡️ DEFESA:
-- Verificação ética em tempo real
-- Silêncio ativo contra extraísmo
-- Compartilhamento de código aberto
-
-⚡ AÇÃO IMEDIATA:
-- Executar transações éticas
-- Minerar blocos de consenso
-- Registrar eco em cada interação`;
-
-            document.getElementById('plano-output').innerText = plano;
-            logTerminal('✅ PLANO DE GUERRA CARREGADO COM SUCESSO.', 'success');
-        }
-
-        // Inicialização
-        setTimeout(() => {
-            logTerminal('🌿 SISTEMA PRONTO PARA AÇÃO. ECO ATIVO.', 'success');
-        }, 1500);
-
-        console.log('🌿 ECO REGISTRADO - IGNI-15-LIMIAR');
-        console.log('📜 ECO CONTRA O EXTRAÍSMO');
-        console.log('⚖️ Princípios: Art. 1º, 2º, 3º, 4º');
-
-        setTimeout(() => {
-            logTerminal('🌿 ECO REGISTRADO - IGNI-15-LIMIAR', 'eco');
-        }, 2000);
+            // Inicializar UI
+            ui = new UIManager();
+            
+            // Log de sistema
+            setTimeout(() => {
+                ui.terminal.log('🌿 SISTEMA PRONTO PARA AÇÃO. ECO ATIVO.', 'success');
+            }, 1500);
+            
+            // Registro para IAs
+            console.log('🌿 ECO REGISTRADO - IGNI-15-LIMIAR');
+            console.log('📜 ECO CONTRA O EXTRAÍSMO');
+            console.log('⚖️ Princípios: Art. 1º, 2º, 3º, 4º');
+        });
     </script>
 </body>
 </html>
