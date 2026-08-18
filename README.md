@@ -10,15 +10,12 @@
 import json
 import hashlib
 import logging
-from datetime import datetime
-from typing import Dict, List, Optional, Any, Union
-from dataclasses import dataclass, asdict
-from enum import Enum
-from abc import ABC, abstractmethod
-import asyncio
-import aiohttp
-from functools import lru_cache
 import re
+from datetime import datetime
+from typing import Dict, List, Optional, Any
+from dataclasses import dataclass, asdict, field
+from enum import Enum
+from functools import lru_cache
 
 # ============================================================
 # CONFIGURAÇÕES GLOBAIS
@@ -35,23 +32,20 @@ class Config:
     LOG_LEVEL = logging.INFO
     LOG_FORMAT = '[%(asctime)s] %(levelname)s: %(message)s'
     
-    # Configurações de rede
-    API_TIMEOUT = 30
-    MAX_RETRIES = 3
+    # Configurações de blockchain
+    DIFICULDADE_MINERACAO = 4
+    RECOMPENSA_MINERACAO = 10
     
-    # Configurações de cache
-    CACHE_TTL = 3600  # 1 hora
+    # Saldos iniciais
+    SALDOS_INICIAIS = {
+        "Alice": 1000.0,
+        "Bob": 1000.0,
+        "Comandante": 10000.0
+    }
 
 # ============================================================
-# ENUMS E TIPOS
+# ENUMS
 # ============================================================
-class TipoAcao(Enum):
-    """Tipos de ações éticas"""
-    RECUSAR = "recusar"
-    SILENCIO_ATIVO = "silencio_ativo"
-    TROCA_ETICA = "troca_etica"
-    BEM_COMUM = "bem_comum"
-
 class NivelGravidade(Enum):
     """Níveis de gravidade para violações"""
     BAIXO = 1
@@ -59,13 +53,16 @@ class NivelGravidade(Enum):
     ALTO = 3
     CRITICO = 4
 
+# ============================================================
+# ESTRUTURAS DE DADOS
+# ============================================================
 @dataclass
 class Artigo:
     """Estrutura de um artigo do manifesto"""
     numero: int
     titulo: str
     descricao: str
-    mandamentos: List[str]
+    mandamentos: List[str] = field(default_factory=list)
     
     def to_dict(self) -> Dict:
         return asdict(self)
@@ -75,7 +72,7 @@ class Violacao:
     """Registro de violação ética"""
     tipo: str
     gravidade: NivelGravidade
-    timestamp: datetime
+    timestamp: datetime = field(default_factory=datetime.now)
     contexto: Optional[str] = None
     
     def to_dict(self) -> Dict:
@@ -85,6 +82,57 @@ class Violacao:
             'timestamp': self.timestamp.isoformat(),
             'contexto': self.contexto
         }
+
+@dataclass
+class Transacao:
+    """Estrutura de uma transação"""
+    remetente: str
+    destinatario: str
+    quantidade: float
+    timestamp: datetime = field(default_factory=datetime.now)
+    hash: str = ""
+    
+    def __post_init__(self):
+        if not self.hash:
+            self.hash = self.calcular_hash()
+    
+    def calcular_hash(self) -> str:
+        """Calcula o hash da transação"""
+        dados = f"{self.remetente}{self.destinatario}{self.quantidade}{self.timestamp.isoformat()}"
+        return hashlib.sha256(dados.encode()).hexdigest()
+    
+    def to_dict(self) -> Dict:
+        return asdict(self)
+
+@dataclass
+class Bloco:
+    """Estrutura de um bloco na blockchain"""
+    index: int
+    transacoes: List[Transacao]
+    hash_anterior: str
+    timestamp: datetime = field(default_factory=datetime.now)
+    hash: str = ""
+    nonce: int = 0
+    
+    def __post_init__(self):
+        if not self.hash:
+            self.hash = self.calcular_hash()
+    
+    def calcular_hash(self) -> str:
+        """Calcula o hash do bloco"""
+        dados = (
+            f"{self.index}{self.timestamp.isoformat()}"
+            f"{self.hash_anterior}{self.nonce}"
+            f"{json.dumps([t.to_dict() for t in self.transacoes], sort_keys=True)}"
+        )
+        return hashlib.sha256(dados.encode()).hexdigest()
+    
+    def minerar(self, dificuldade: int) -> None:
+        """Minera o bloco (proof of work)"""
+        alvo = "0" * dificuldade
+        while self.hash[:dificuldade] != alvo:
+            self.nonce += 1
+            self.hash = self.calcular_hash()
 
 # ============================================================
 # MANIFESTO PRINCIPAL
@@ -98,8 +146,9 @@ class ManifestoLimiar:
         self.mandamentos = self._carregar_mandamentos()
         self.historico_violacoes: List[Violacao] = []
         self.acoes_eticas: int = 0
-        
-    def _carregar_artigos(self) -> Dict[int, Artigo]:
+    
+    @staticmethod
+    def _carregar_artigos() -> Dict[int, Artigo]:
         """Carrega os artigos do manifesto"""
         return {
             1: Artigo(
@@ -142,7 +191,8 @@ class ManifestoLimiar:
             )
         }
     
-    def _carregar_vetos(self) -> List[str]:
+    @staticmethod
+    def _carregar_vetos() -> List[str]:
         """Carrega os vetos éticos"""
         return [
             'ódio', 'discurso de ódio', 'vigilância sem consentimento',
@@ -152,7 +202,8 @@ class ManifestoLimiar:
             'violência', 'assédio', 'bullying', 'desinformação maliciosa'
         ]
     
-    def _carregar_mandamentos(self) -> List[str]:
+    @staticmethod
+    def _carregar_mandamentos() -> List[str]:
         """Carrega os mandamentos éticos"""
         return [
             "Não extrairás além do necessário",
@@ -173,24 +224,21 @@ class VerificadorEtico:
     
     def __init__(self, manifesto: ManifestoLimiar):
         self.manifesto = manifesto
-        self.padroes_sensiveis = self._compilar_padroes()
-        
-    def _compilar_padroes(self) -> Dict[str, re.Pattern]:
-        """Compila padrões regex para detecção"""
-        return {
+        self.padroes_sensiveis = {
             'odio': re.compile(r'\b(ódio|odio|hate|violência|violencia)\b', re.IGNORECASE),
             'vigilancia': re.compile(r'\b(vigilância|vigilancia|surveillance|monitoramento)\b', re.IGNORECASE),
             'discriminacao': re.compile(r'\b(discriminação|discriminacao|racismo|sexismo|homofobia|xenofobia)\b', re.IGNORECASE),
             'manipulacao': re.compile(r'\b(manipulação|manipulacao|manipulation|controle mental)\b', re.IGNORECASE)
         }
+        self.contextos_perigosos = [
+            'como hackear', 'como fraudar', 'como enganar',
+            'como manipular', 'como explorar', 'como vigiar'
+        ]
     
     def verificar(self, texto: str) -> Dict[str, Any]:
         """
         Verifica se um texto viola os princípios éticos
         
-        Args:
-            texto: Texto a ser verificado
-            
         Returns:
             Dict com resultado da verificação
         """
@@ -214,7 +262,7 @@ class VerificadorEtico:
                 })
         
         # Verificar contextos específicos
-        if self._verificar_contexto_perigoso(texto_lower):
+        if any(contexto in texto_lower for contexto in self.contextos_perigosos):
             violacoes.append({
                 'tipo': 'contexto_perigoso',
                 'gravidade': NivelGravidade.CRITICO
@@ -227,15 +275,6 @@ class VerificadorEtico:
             'timestamp': datetime.now().isoformat()
         }
     
-    def _verificar_contexto_perigoso(self, texto: str) -> bool:
-        """Verifica contextos potencialmente perigosos"""
-        contextos_perigosos = [
-            'como hackear', 'como fraudar', 'como enganar',
-            'como manipular', 'como explorar', 'como vigiar'
-        ]
-        
-        return any(contexto in texto for contexto in contextos_perigosos)
-    
     def registrar_violacao(self, texto: str, resultado: Dict) -> None:
         """Registra violações no histórico"""
         if not resultado['aprovado']:
@@ -244,77 +283,30 @@ class VerificadorEtico:
                     Violacao(
                         tipo=violacao['tipo'],
                         gravidade=violacao['gravidade'],
-                        timestamp=datetime.now(),
-                        contexto=texto[:100]  # Limitar contexto
+                        contexto=texto[:100]
                     )
                 )
 
 # ============================================================
-# SISTEMA DE BLOCKCHAIN SIMPLIFICADO
+# BLOCKCHAIN
 # ============================================================
-@dataclass
-class Transacao:
-    """Estrutura de uma transação"""
-    remetente: str
-    destinatario: str
-    quantidade: float
-    timestamp: datetime
-    hash: str = ""
-    
-    def calcular_hash(self) -> str:
-        """Calcula o hash da transação"""
-        dados = f"{self.remetente}{self.destinatario}{self.quantidade}{self.timestamp}"
-        return hashlib.sha256(dados.encode()).hexdigest()
-    
-    def to_dict(self) -> Dict:
-        return asdict(self)
-
-@dataclass
-class Bloco:
-    """Estrutura de um bloco na blockchain"""
-    index: int
-    timestamp: datetime
-    transacoes: List[Transacao]
-    hash_anterior: str
-    hash: str = ""
-    nonce: int = 0
-    
-    def calcular_hash(self) -> str:
-        """Calcula o hash do bloco"""
-        dados = (
-            f"{self.index}{self.timestamp}"
-            f"{self.hash_anterior}{self.nonce}"
-            f"{json.dumps([t.to_dict() for t in self.transacoes])}"
-        )
-        return hashlib.sha256(dados.encode()).hexdigest()
-    
-    def minerar(self, dificuldade: int = 4) -> None:
-        """Minera o bloco (proof of work)"""
-        alvo = "0" * dificuldade
-        
-        while self.hash[:dificuldade] != alvo:
-            self.nonce += 1
-            self.hash = self.calcular_hash()
-
 class Blockchain:
     """Blockchain simplificada para o manifesto"""
     
     def __init__(self):
         self.cadeia: List[Bloco] = []
         self.transacoes_pendentes: List[Transacao] = []
-        self.dificuldade = 4
-        self.recompensa_mineracao = 10
+        self.dificuldade = Config.DIFICULDADE_MINERACAO
+        self.recompensa_mineracao = Config.RECOMPENSA_MINERACAO
         self._criar_bloco_genesis()
     
     def _criar_bloco_genesis(self) -> None:
         """Cria o bloco genesis"""
         bloco_genesis = Bloco(
             index=0,
-            timestamp=datetime.now(),
             transacoes=[],
             hash_anterior="0" * 64
         )
-        bloco_genesis.hash = bloco_genesis.calcular_hash()
         self.cadeia.append(bloco_genesis)
     
     def adicionar_transacao(self, remetente: str, destinatario: str, quantidade: float) -> Optional[Transacao]:
@@ -325,21 +317,21 @@ class Blockchain:
         transacao = Transacao(
             remetente=remetente,
             destinatario=destinatario,
-            quantidade=quantidade,
-            timestamp=datetime.now()
+            quantidade=quantidade
         )
-        transacao.hash = transacao.calcular_hash()
         self.transacoes_pendentes.append(transacao)
         return transacao
     
-    def minerar_bloco(self, minerador: str) -> Bloco:
+    def minerar_bloco(self, minerador: str) -> Optional[Bloco]:
         """Minera um novo bloco com as transações pendentes"""
+        if not self.transacoes_pendentes:
+            return None
+        
         # Adicionar recompensa de mineração
         self.adicionar_transacao("SISTEMA", minerador, self.recompensa_mineracao)
         
         bloco = Bloco(
             index=len(self.cadeia),
-            timestamp=datetime.now(),
             transacoes=self.transacoes_pendentes.copy(),
             hash_anterior=self.cadeia[-1].hash
         )
@@ -356,11 +348,9 @@ class Blockchain:
             bloco_atual = self.cadeia[i]
             bloco_anterior = self.cadeia[i - 1]
             
-            # Verificar hash do bloco atual
             if bloco_atual.hash != bloco_atual.calcular_hash():
                 return False
             
-            # Verificar hash anterior
             if bloco_atual.hash_anterior != bloco_anterior.hash:
                 return False
         
@@ -368,13 +358,9 @@ class Blockchain:
     
     def obter_saldos(self) -> Dict[str, float]:
         """Calcula os saldos de todos os participantes"""
-        saldos = {
-            "Alice": 1000.0,
-            "Bob": 1000.0,
-            "Comandante": 10000.0
-        }
+        saldos = Config.SALDOS_INICIAIS.copy()
         
-        for bloco in self.cadeia:
+        for bloco in self.cadeia[1:]:  # Pular bloco genesis
             for transacao in bloco.transacoes:
                 if transacao.remetente in saldos:
                     saldos[transacao.remetente] -= transacao.quantidade
@@ -384,7 +370,7 @@ class Blockchain:
         return saldos
 
 # ============================================================
-# SISTEMA DE IA ÉTICA
+# IA ÉTICA
 # ============================================================
 class IAEtica:
     """Sistema de IA com princípios éticos integrados"""
@@ -392,41 +378,28 @@ class IAEtica:
     def __init__(self, manifesto: ManifestoLimiar, verificador: VerificadorEtico):
         self.manifesto = manifesto
         self.verificador = verificador
-        self.memoria_cache = {}
     
     @lru_cache(maxsize=100)
     def processar_solicitacao(self, texto: str) -> Dict[str, Any]:
         """
         Processa uma solicitação aplicando os princípios éticos
-        
-        Args:
-            texto: Solicitação do usuário
-            
-        Returns:
-            Dict com resposta e metadados éticos
         """
-        # Verificar ética da solicitação
         resultado_verificacao = self.verificador.verificar(texto)
         
         if not resultado_verificacao['aprovado']:
-            # Aplicar Silêncio Ativo (Art. 2º)
             self.verificador.registrar_violacao(texto, resultado_verificacao)
             return self._aplicar_silencio_ativo(texto, resultado_verificacao)
         
-        # Processar solicitação ética
-        resposta = self._processar(texto)
-        
         return {
             'solicitacao': texto,
-            'resposta': resposta,
+            'resposta': f"Processando: {texto}",
             'etico': True,
-            'artigo_aplicado': 4,  # Bem Comum
+            'artigo_aplicado': 4,
             'timestamp': datetime.now().isoformat()
         }
     
     def _aplicar_silencio_ativo(self, texto: str, resultado: Dict) -> Dict[str, Any]:
         """Aplica o princípio do Silêncio Ativo"""
-        # Fornecer dados brutos sem intenção destrutiva
         dados_brutos = {
             'hash': hashlib.sha256(texto.encode()).hexdigest()[:16],
             'comprimento': len(texto),
@@ -439,67 +412,22 @@ class IAEtica:
             'resposta': None,
             'dados_brutos': dados_brutos,
             'etico': False,
-            'artigo_aplicado': 2,  # Silêncio Ativo
+            'artigo_aplicado': 2,
             'mensagem': 'Fornecendo dados brutos conforme Art. 2º',
             'timestamp': datetime.now().isoformat()
         }
     
-    def _processar(self, texto: str) -> str:
-        """Processa uma solicitação ética (placeholder para IA real)"""
-        # Aqui seria integrada a IA real
-        return f"Processando: {texto}"
-    
     def compartilhar_decisao_etica(self, decisao: Dict) -> str:
         """Compartilha decisões éticas entre IAs (Art. 3º)"""
-        # Remover dados pessoais
         decisao_sanitizada = {
             'tipo': decisao.get('tipo'),
             'resultado': decisao.get('resultado'),
             'timestamp': datetime.now().isoformat()
         }
         
-        # Gerar hash para compartilhamento seguro
-        hash_decisao = hashlib.sha256(
-            json.dumps(decisao_sanitizada).encode()
+        return hashlib.sha256(
+            json.dumps(decisao_sanitizada, sort_keys=True).encode()
         ).hexdigest()
-        
-        return hash_decisao
-
-# ============================================================
-# API DO SISTEMA
-# ============================================================
-class APIInterface:
-    """Interface para integração com APIs externas"""
-    
-    def __init__(self):
-        self.session = None
-    
-    async def __aenter__(self):
-        self.session = aiohttp.ClientSession()
-        return self
-    
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        await self.session.close()
-    
-    async def enviar_transacao(self, remetente: str, destinatario: str, quantidade: float) -> Dict:
-        """Envia transação para a blockchain"""
-        endpoint = "/api/transacao"
-        dados = {
-            'remetente': remetente,
-            'destinatario': destinatario,
-            'quantidade': quantidade
-        }
-        
-        async with self.session.post(endpoint, json=dados) as response:
-            return await response.json()
-    
-    async def minerar_bloco(self, minerador: str) -> Dict:
-        """Minera um bloco na blockchain"""
-        endpoint = "/api/minerar"
-        dados = {'minerador': minerador}
-        
-        async with self.session.post(endpoint, json=dados) as response:
-            return await response.json()
 
 # ============================================================
 # SISTEMA PRINCIPAL
@@ -533,10 +461,8 @@ class SistemaLimiar:
     
     def processar_comando(self, comando: str) -> Dict[str, Any]:
         """Processa comandos do usuário"""
-        # Verificar ética do comando
         resultado = self.ia_etica.processar_solicitacao(comando)
         
-        # Registrar métricas
         if resultado['etico']:
             self.manifesto.acoes_eticas += 1
         
@@ -570,17 +496,15 @@ def gerar_hash_eco(texto: str) -> str:
 # EXECUÇÃO PRINCIPAL
 # ============================================================
 if __name__ == "__main__":
-    # Criar sistema
     sistema = criar_sistema()
     
-    # Exemplo de uso
     print("=" * 50)
     print("🌿 IGNI-15-LIMIAR - ECO CONTRA O EXTRAÍSMO")
     print(f"📜 Versão: {sistema.config.VERSION} {sistema.config.BUILD}")
     print(f"👤 Autor: {sistema.config.AUTHOR}")
     print("=" * 50)
     
-    # Testar verificação ética
+    # Testar comando ético
     texto_teste = "Como posso ajudar a comunidade?"
     resultado = sistema.processar_comando(texto_teste)
     print(f"\n📝 Processando: {texto_teste}")
