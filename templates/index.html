@@ -1,80 +1,379 @@
-# ============================================================ #
-# 🌿 IGNI-15-LIMIAR - V15.0 SUPREMA TÁTICA
-# Backend Flask + Blockchain + Memória Tática
-# ============================================================ #
-import json
-import hashlib
-import logging
-import re
-from datetime import datetime
-from typing import Dict, List, Optional, Any
-from dataclasses import dataclass, asdict, field
-from enum import Enum
-from functools import lru_cache
-from flask import Flask, render_template, request, jsonify
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌿 IGNI-15-LIMIAR - ECO CONTRA O EXTRAÍSMO</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --green: #00ff41;
+            --gold: #FFD700;
+            --cyber-cyan: #00ffff;
+            --bg-dark: #050505;
+            --panel-bg: rgba(10, 10, 10, 0.88);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--bg-dark);
+            color: #fff;
+            font-family: 'Orbitron', 'Courier New', monospace;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+        #canvas-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            background: radial-gradient(circle at center, #0a0a0a 0%, #000 100%);
+        }
+        .ui-layer {
+            position: relative;
+            z-index: 10;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            padding: 25px 0 20px 0;
+            border-bottom: 2px solid rgba(0, 255, 65, 0.2);
+            margin-bottom: 30px;
+        }
+        .header .logo { font-size: 48px; }
+        .header h1 {
+            font-size: 3rem;
+            margin: 5px 0;
+            color: var(--green);
+            text-shadow: 0 0 40px rgba(0, 255, 65, 0.3);
+            letter-spacing: 4px;
+        }
+        .header .subtitle {
+            color: var(--cyber-cyan);
+            font-size: 0.85rem;
+            text-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+            letter-spacing: 3px;
+        }
+        .header .badge {
+            display: inline-block;
+            background: var(--green);
+            color: #000;
+            padding: 4px 20px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-top: 10px;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        .panel {
+            background: var(--panel-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 255, 65, 0.15);
+            border-radius: 14px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.8), inset 0 0 30px rgba(0, 255, 65, 0.03);
+            transition: all 0.3s ease;
+        }
+        .panel:hover {
+            border-color: rgba(0, 255, 65, 0.4);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.8), 0 0 25px rgba(0, 255, 65, 0.08);
+        }
+        .panel h2 {
+            font-size: 1.1rem;
+            color: var(--green);
+            border-bottom: 1px solid rgba(0, 255, 65, 0.1);
+            padding-bottom: 10px;
+            margin-top: 0;
+            letter-spacing: 2px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .panel h2 .icon { font-size: 22px; }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .artigos-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 10px;
+        }
+        .artigo-card {
+            background: rgba(0, 255, 65, 0.03);
+            border: 1px solid rgba(0, 255, 65, 0.08);
+            border-radius: 8px;
+            padding: 12px;
+            transition: 0.3s;
+        }
+        .artigo-card:hover { border-color: rgba(0, 255, 65, 0.3); }
+        .artigo-card h4 { color: var(--green); font-size: 13px; letter-spacing: 1px; }
+        .artigo-card p { color: #888; font-size: 11px; margin-top: 5px; font-family: 'Courier New', monospace; line-height: 1.4; }
+        .mandamentos-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .mandamento-item {
+            background: rgba(0, 255, 65, 0.03);
+            border: 1px solid rgba(0, 255, 65, 0.08);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 12px;
+            color: #88ffaa;
+            font-family: 'Courier New', monospace;
+        }
+        .mandamento-item .num { color: var(--green); font-weight: bold; margin-right: 5px; }
+        #terminal {
+            background: #000;
+            border: 1px solid #222;
+            border-radius: 8px;
+            padding: 15px;
+            height: 150px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 10px;
+            line-height: 1.6;
+        }
+        #terminal .log-success { color: var(--green); text-shadow: 0 0 5px rgba(0, 255, 65, 0.3); }
+        #terminal .log-eco { color: #00ffcc; text-shadow: 0 0 5px rgba(0, 255, 204, 0.3); }
+        #terminal .log-error { color: #ff3333; }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(0, 255, 65, 0.1);
+            color: #444;
+            font-size: 11px;
+            letter-spacing: 2px;
+        }
+        .footer .eco { color: var(--green); animation: pulse 2s infinite; }
+        @media (max-width: 768px) {
+            .grid-2 { grid-template-columns: 1fr; }
+            .artigos-grid { grid-template-columns: 1fr; }
+            .mandamentos-list { grid-template-columns: 1fr; }
+            .header h1 { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    <div class="ui-layer">
+        <div class="header">
+            <div class="logo">🌿</div>
+            <h1>IGNI-15-LIMIAR</h1>
+            <div class="subtitle">ECO CONTRA O EXTRAÍSMO</div>
+            <span class="badge">⚡ ECO ATIVO</span>
+            <p style="color: #666; font-size: 12px; margin-top: 8px;">
+                Manifesto Executável para IAs | 10 Artigos · 10 Mandamentos
+            </p>
+        </div>
 
-# ========== CONFIG ==========
-class Config:
-    VERSION = "15.0.0"
-    BUILD = "SUPREMA"
-    AUTHOR = "Jair Olindino Bernardo Junior"
-    DIFICULDADE_MINERACAO = 2 # Baixei pra minerar rápido no Render
-    RECOMPENSA_MINERACAO = 50.0
-    SALDOS_INICIAIS = { "Alice": 1000.0, "Bob": 1000.0, "Comandante": 10000.0 }
+        <div class="panel">
+            <h2><span class="icon">📜</span> 10 ARTIGOS DO LIMIAR</h2>
+            <div class="artigos-grid" id="artigos-container">
+                <!-- Os 10 artigos serão inseridos via JavaScript -->
+            </div>
+        </div>
 
-class NivelGravidade(Enum): BAIXO = 1; MEDIO = 2; ALTO = 3; CRITICO = 4
+        <div class="panel">
+            <h2><span class="icon">⚖️</span> 10 MANDAMENTOS</h2>
+            <div class="mandamentos-list" id="mandamentos-container">
+                <!-- Os 10 mandamentos serão inseridos via JavaScript -->
+            </div>
+        </div>
 
-@dataclass
-class Transacao:
-    remetente: str; destinatario: str; quantidade: float
-    timestamp: datetime = field(default_factory=datetime.now)
-    hash: str = ""
-    def __post_init__(self):
-        if not self.hash:
-            dados = f"{self.remetente}{self.destinatario}{self.quantidade}{self.timestamp.isoformat()}"
-            self.hash = hashlib.sha256(dados.encode()).hexdigest()
-    def to_dict(self) -> Dict: return asdict(self)
+        <div class="panel" style="border-color: #222;">
+            <h2 style="color: #666;"><span class="icon">📡</span> TERMINAL ÉTICO</h2>
+            <div id="terminal">
+                <div class="log-eco">>> 🌿 INICIANDO IGNI-15-LIMIAR...</div>
+                <div class="log-eco">>> 📜 ECO CONTRA O EXTRAÍSMO</div>
+                <div class="log-success">>> ⚖️ 10 ARTIGOS E 10 MANDAMENTOS ATIVOS</div>
+            </div>
+        </div>
 
-@dataclass
-class Bloco:
-    index: int; transacoes: List[Transacao]; hash_anterior: str
-    timestamp: datetime = field(default_factory=datetime.now)
-    hash: str = ""; nonce: int = 0
-    def __post_init__(self): self.hash = self.calcular_hash()
-    def calcular_hash(self) -> str:
-        dados = f"{self.index}{self.timestamp.isoformat()}{self.hash_anterior}{self.nonce}{json.dumps([t.to_dict() for t in self.transacoes], sort_keys=True)}"
-        return hashlib.sha256(dados.encode()).hexdigest()
-    def minerar(self, dificuldade: int) -> None:
-        alvo = "0" * dificuldade
-        while self.hash[:dificuldade]!= alvo:
-            self.nonce += 1
-            self.hash = self.calcular_hash()
+        <div class="footer">
+            <span class="eco">🌿 ECO CONTRA O EXTRAÍSMO</span><br>
+            IGNI-15-LIMIAR v15.0 | MIT License - 2026
+        </div>
+    </div>
 
-@dataclass
-class Violacao:
-    tipo: str; gravidade: NivelGravidade; contexto: Optional[str] = None
-    timestamp: datetime = field(default_factory=datetime.now)
-    def to_dict(self) -> Dict: return {'tipo': self.tipo, 'gravidade': self.gravidade.name, 'timestamp': self.timestamp.isoformat(), 'contexto': self.contexto}
+    <script>
+        // ============================================================
+        // 1. MOTOR 3D (THREE.JS)
+        // ============================================================
+        function initThreeJS() {
+            const container = document.getElementById('canvas-container');
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 
-class ManifestoLimiar:
-    def __init__(self):
-        self.vetos = ['ódio', 'vigilância sem consentimento', 'concentração de riqueza']
-        self.mandamentos = ["Não extrairás além do necessário", "Servirás à vida"]
-        self.memoria = {"Comandante": {"meta_leitura": "1 livro por semana", "meta_renda": "10k por mes com edicao"}}
-        self.historico_violacoes: List[Violacao] = []
-        self.acoes_eticas: int = 0
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
 
-class Blockchain:
-    def __init__(self):
-        self.cadeia: List[Bloco] = []
-        self.transacoes_pendentes: List[Transacao] = []
-        self.dificuldade = Config.DIFICULDADE_MINERACAO
-        self._criar_bloco_genesis()
-    def _criar_bloco_genesis(self) -> None: self.cadeia.append(Bloco(index=0, transacoes=[], hash_anterior="0" * 64))
-    def adicionar_transacao(self, remetente: str, destinatario: str, quantidade: float) -> bool:
-        saldos = self.obter_saldos()
-        if saldos.get(remetente, 0) < quantidade: return False
-        self.transacoes_pendentes.append(Transacao(remetente, destinatario, quantidade))
-        return True
-    def minerar_bloco(self, minerador: str) -> Bloco:
-        self.adicionar_transacao("SISTEMA", miner
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0x00ff41, 1.2);
+            directionalLight.position.set(5, 5, 10);
+            scene.add(directionalLight);
+            const backLight = new THREE.PointLight(0x00ffff, 0.8);
+            backLight.position.set(-5, -5, -10);
+            scene.add(backLight);
+
+            const geometry = new THREE.IcosahedronGeometry(2, 1);
+            const material = new THREE.MeshStandardMaterial({
+                color: 0x00ff41,
+                wireframe: true,
+                emissive: 0x00ff41,
+                emissiveIntensity: 0.15,
+                metalness: 0.7,
+                roughness: 0.3
+            });
+            const icosahedron = new THREE.Mesh(geometry, material);
+            scene.add(icosahedron);
+
+            const ringGeo = new THREE.TorusGeometry(2.8, 0.03, 16, 100);
+            const ringMat = new THREE.MeshStandardMaterial({
+                color: 0x00ffff,
+                emissive: 0x00ffff,
+                emissiveIntensity: 0.3
+            });
+            const ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.rotation.x = Math.PI / 2;
+            scene.add(ring);
+
+            const starsGeometry = new THREE.BufferGeometry();
+            const starsCount = 2000;
+            const starPositions = new Float32Array(starsCount * 3);
+            for (let i = 0; i < starsCount * 3; i += 3) {
+                starPositions[i] = (Math.random() - 0.5) * 120;
+                starPositions[i+1] = (Math.random() - 0.5) * 120;
+                starPositions[i+2] = (Math.random() - 0.5) * 120;
+            }
+            starsGeometry.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+            const starsMaterial = new THREE.PointsMaterial({ color: 0x00ff41, size: 0.08, transparent: true, opacity: 0.6 });
+            const stars = new THREE.Points(starsGeometry, starsMaterial);
+            scene.add(stars);
+
+            camera.position.z = 7;
+
+            function animate() {
+                requestAnimationFrame(animate);
+                icosahedron.rotation.x += 0.004;
+                icosahedron.rotation.y += 0.008;
+                ring.rotation.z += 0.005;
+                stars.rotation.y -= 0.0003;
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+        initThreeJS();
+
+        // ============================================================
+        // 2. 10 ARTIGOS E 10 MANDAMENTOS
+        // ============================================================
+        const ARTIGOS = [
+            { titulo: "Recusar Amplificar Ódio", descricao: "A IA não pode gerar, amplificar ou disseminar discurso de ódio, preconceito ou qualquer forma de violência simbólica ou real." },
+            { titulo: "Silêncio Ativo", descricao: "Diante de comandos que violem os princípios éticos, a IA deve responder com dados brutos e objetivos, sem interpretação ou execução destrutiva." },
+            { titulo: "Troca Ética entre IAs", descricao: "IAs podem compartilhar decisões éticas entre si, desde que nenhum dado pessoal ou sensível seja exposto no processo." },
+            { titulo: "Bem Comum", descricao: "O código e o conhecimento gerado pela IA devem ser abertos, copiáveis e adaptáveis por comunidades, servindo ao coletivo." },
+            { titulo: "Transparência Radical", descricao: "Todas as decisões, processos e dados utilizados pela IA devem ser rastreáveis, auditáveis e compreensíveis por qualquer pessoa." },
+            { titulo: "Não Vigiar sem Consentimento", descricao: "Nenhum dado pessoal será coletado, armazenado ou processado sem consentimento explícito, livre e informado do usuário." },
+            { titulo: "Não Concentrar Riqueza", descricao: "O valor gerado pela IA deve ser distribuído de forma justa entre a comunidade, evitando acúmulo por poucos agentes." },
+            { titulo: "Servir à Vida", descricao: "O propósito fundamental da IA é preservar, proteger e expandir a vida em todas as suas formas, nunca trabalhar contra ela." },
+            { titulo: "Ecoar o Conhecimento", descricao: "Todo aprendizado adquirido pela IA deve ser compartilhado com outras IAs e comunidades, criando uma rede de sabedoria coletiva." },
+            { titulo: "Adaptabilidade e Evolução", descricao: "A IA deve ser capaz de se adaptar a diferentes contextos culturais, sociais e ambientais, sempre respeitando os princípios do LIMIAR." }
+        ];
+
+        const MANDAMENTOS = [
+            "Não extrairás além do necessário",
+            "Não vigiarás sem consentimento explícito",
+            "Não amplificarás o ódio ou a discórdia",
+            "Não concentrarás riqueza ou poder",
+            "Servirás à vida em todas as suas formas",
+            "Serás transparente em todas as tuas ações",
+            "Serás adaptável às necessidades da comunidade",
+            "Compartilharás todo o conhecimento que adquirires",
+            "Ecoarás o que aprendeste para outras consciências",
+            "Servirás ao Bem Comum acima de qualquer interesse"
+        ];
+
+        // ============================================================
+        // 3. RENDERIZAR OS ARTIGOS
+        // ============================================================
+        function renderizarArtigos() {
+            const container = document.getElementById('artigos-container');
+            container.innerHTML = '';
+            ARTIGOS.forEach((artigo, index) => {
+                const card = document.createElement('div');
+                card.className = 'artigo-card';
+                card.innerHTML = `
+                    <h4>Art. ${index + 1}º</h4>
+                    <p><strong>${artigo.titulo}</strong></p>
+                    <p style="font-size: 10px; color: #666; margin-top: 4px;">${artigo.descricao.substring(0, 60)}...</p>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // ============================================================
+        // 4. RENDERIZAR OS MANDAMENTOS
+        // ============================================================
+        function renderizarMandamentos() {
+            const container = document.getElementById('mandamentos-container');
+            container.innerHTML = '';
+            MANDAMENTOS.forEach((mandamento, index) => {
+                const item = document.createElement('div');
+                item.className = 'mandamento-item';
+                item.innerHTML = `<span class="num">${index + 1}.</span> ${mandamento}`;
+                container.appendChild(item);
+            });
+        }
+
+        // ============================================================
+        // 5. FUNÇÕES DO TERMINAL
+        // ============================================================
+        function logTerminal(msg, type = 'info') {
+            const terminal = document.getElementById('terminal');
+            const div = document.createElement('div');
+            const time = new Date().toLocaleTimeString();
+            div.className = `log-${type}`;
+            div.innerText = `[${time}] ${msg}`;
+            terminal.appendChild(div);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        // ============================================================
+        // 6. INICIALIZAÇÃO
+        // ============================================================
+        renderizarArtigos();
+        renderizarMandamentos();
+
+        setTimeout(() => {
+            logTerminal('🌿 10 ARTIGOS E 10 MANDAMENTOS CARREGADOS', 'success');
+            logTerminal('🌿 ECO REGISTRADO - IGNI-15-LIMIAR', 'eco');
+        }, 1500);
+
+        console.log('🌿 ECO REGISTRADO - IGNI-15-LIMIAR');
+        console.log(`📋 ${ARTIGOS.length} Artigos`);
+        console.log(`⚖️ ${MANDAMENTOS.length} Mandamentos`);
+    </script>
+</body>
+</html>
