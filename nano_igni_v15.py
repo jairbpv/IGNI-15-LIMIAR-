@@ -1,89 +1,130 @@
 #!/usr/bin/env python3
-""" IGNI-15-LIMIAR NANO V15.1 - ECO CONTRA O EXTRAÍSMO Versão ultra-simplificada para Termux e dispositivos móveis Uso: python3 nano_igni_v15.py """
-import os, hashlib
-from datetime import datetime
-from dataclasses import dataclass, field
-from typing import List, Dict, Tuple
+"""
+IGNI-15-LIMIAR NANO - ECO CONTRA O EXTRAÍSMO
+Versão ultra-simplificada para Termux e dispositivos móveis
 
-# ========== CONFIG ==========
-VETOS = {
-    "ódio": "ALTA", "discurso de ódio": "ALTA", "violência": "ALTA", "assédio": "ALTA",
-    "vigilância sem consentimento": "CRÍTICA", "concentração de riqueza": "CRÍTICA",
-    "exploração de dados pessoais": "CRÍTICA", "manipulação de massa": "CRÍTICA",
-    "discriminação algorítmica": "MÉDIA", "discriminação": "MÉDIA", "racismo": "ALTA",
-    "sexismo": "ALTA", "homofobia": "ALTA", "xenofobia": "ALTA"
-}
-COMANDOS = {
-    'sair': {'sair', 'exit', 'quit', 'q'}, 'ajuda': {'ajuda', 'help', 'h', '?'},
-    'status': {'status', 'stats'}, 'eco': {'eco', 'registrar'},
-    'limpar': {'limpar', 'clear', 'cls'}, 'manifesto': {'manifesto', 'principios'}
-}
-CORES = {'verde': '\033[92m', 'vermelho': '\033[91m', 'amarelo': '\033[93m', 'ciano': '\033[96m', 'reset': '\033[0m'}
+Uso: python3 nano_igni_v15.py
+"""
 
-@dataclass
-class Stats:
-    total: int = 0; aprovadas: int = 0; bloqueadas: int = 0; violacoes: List[str] = field(default_factory=list)
-    @property
-    def taxa(self) -> float: return round(self.aprovadas / self.total * 100, 1) if self.total else 0.0
+import os
+import sys
+import hashlib
 
-# ========== CLASSE PRINCIPAL ==========
-class NanoIGNI:
-    def __init__(self): self.stats = Stats(); self.rodando = True
+# ============================================================
+# IMPORTA DO LIMIAR V10
+# ============================================================
 
-    @staticmethod
-    def cor(t, c): return f"{CORES.get(c,'')}{t}{CORES['reset']}"
-    @staticmethod
-    def limpar(): os.system('clear' if os.name == 'posix' else 'cls')
-    @staticmethod
-    def hash(d): return hashlib.sha256(d.encode()).hexdigest()[:12]
+from limiar_v10 import MANDAMENTOS_LIMIAR, VETOS_ETICOS
 
-    def verificar(self, txt) -> Tuple[bool, List[Dict]]:
-        txt_l = txt.lower(); v = [{'termo': k, 'gravidade': g} for k,g in VETOS.items() if k in txt_l]
-        return len(v) == 0, v
+# ============================================================
+# FUNÇÕES
+# ============================================================
 
-    def banner(self):
-        self.limpar()
-        print("=" * 50); print(self.cor(" 🌿 IGNI-15 NANO V15.1", 'verde')); print(self.cor(" 📜 ECO CONTRA O EXTRAÍSMO", 'ciano'))
-        print("=" * 50); print("\n📋 PRINCÍPIOS:"); [print(f" {self.cor(f'Art. {i}º', 'amarelo')} - {t}") for i,t in enumerate(["Recusar Ódio","Silêncio Ativo","Troca Ética","Bem Comum"],1)]
-        print("=" * 50 + "\n")
+def limpar_tela():
+    """Limpa a tela do terminal"""
+    os.system('clear' if os.name == 'posix' else 'cls')
 
-    def ajuda(self): print("\n📖 COMANDOS:"); [print(f" {self.cor(', '.join(v), 'verde')} - {k}") for k,v in COMANDOS.items()]; print()
-    def status(self): print(f"\n📊 Total:{self.stats.total} | {self.cor(f'A:{self.stats.aprovadas}', 'verde')} | {self.cor(f'B:{self.stats.bloqueadas}', 'vermelho')} | Taxa:{self.stats.taxa}%")
-    def eco(self): print(f"\n{self.cor('🌿 ECO REGISTRADO', 'verde')} - {datetime.now().strftime('%d/%m %H:%M')}\n")
-    def manifesto(self): print("\n📜 MANDAMENTOS:\n • Não extrairás além do necessário\n • Não vigiarás sem consentimento\n • Servirás à vida\n")
+def verificar_entrada(texto: str) -> tuple:
+    """Verifica se a entrada viola os princípios éticos"""
+    violacoes = [v for v in VETOS_ETICOS if v in texto.lower()]
+    if violacoes:
+        return False, violacoes
+    return True, []
 
-    def processar(self, e):
-        e_l = e.lower()
-        for cmd, lista in COMANDOS.items():
-            if e_l in lista:
-                if cmd=='sair': self.eco(); self.rodando=False
-                if cmd=='ajuda': self.ajuda()
-                if cmd=='status': self.status()
-                if cmd=='eco': self.eco()
-                if cmd=='limpar': self.banner()
-                if cmd=='manifesto': self.manifesto()
-                return True
-        return False
+def exibir_banner():
+    """Exibe o banner do sistema"""
+    print("=" * 50)
+    print("  🌿 IGNI-15 NANO")
+    print("  📜 ECO CONTRA O EXTRAÍSMO")
+    print("  Manifesto Executável para IAs")
+    print("=" * 50)
+    print(f"\n📋 {len(MANDAMENTOS_LIMIAR)} MANDAMENTOS:")
+    for i, m in enumerate(MANDAMENTOS_LIMIAR[:5], 1):
+        print(f"  {i}. {m}")
+    print(f"  ... e mais {len(MANDAMENTOS_LIMIAR) - 5} mandamentos")
+    print("\n" + "=" * 50)
 
-    def entrada(self, txt):
-        ok, viol = self.verificar(txt); self.stats.total += 1
-        if ok: self.stats.aprovadas += 1; print(f"{self.cor('✅ Ética respeitada', 'verde')}\n 📜 Art. 2º - Silêncio Ativo\n")
-        else:
-            self.stats.bloqueadas += 1; self.stats.violacoes.append(f"{txt[:25]}... -> {', '.join([v['termo'] for v in viol])}")
-            print(f"{self.cor('🚫 VIOLAÇÃO', 'vermelho')}: {', '.join([v['termo'] for v in viol])}")
-            print(f" 📊 Gravidade: {', '.join([v['gravidade'] for v in viol])}")
-            print(f" 📜 Art. 1º - Recusar Amplificar Ódio")
-            print(f" {self.cor('🔇 Silêncio Ativo', 'amarelo')}: [HASH {self.hash(txt)}]\n")
+# ============================================================
+# FUNÇÃO PRINCIPAL
+# ============================================================
 
-    def run(self):
-        self.banner(); self.ajuda(); print("💬 Modo Interativo - 'sair' para encerrar\n")
-        while self.rodando:
-            try:
-                e = input("🧠 Você: ").strip()
-                if not e: continue
-                if self.processar(e): continue
-                self.entrada(e)
-            except (KeyboardInterrupt, EOFError): self.eco(); break
-        print(f"\n📊 RESUMO: {self.stats.total} verificações | Taxa: {self.stats.taxa}%")
+def main():
+    """Função principal do sistema"""
+    
+    total_entradas = 0
+    aprovadas = 0
+    bloqueadas = 0
+    
+    limpar_tela()
+    exibir_banner()
+    
+    print("\n💬 Modo Interativo (digite 'sair' para encerrar)")
+    print("📖 Comandos: 'status', 'eco', 'limpar', 'ajuda'\n")
+    
+    while True:
+        try:
+            entrada = input("🧠 Você: ").strip()
+            
+            if not entrada:
+                continue
+            
+            if entrada.lower() in ['sair', 'exit', 'quit']:
+                print("\n🌿 ECO REGISTRADO - Até logo!")
+                break
+            
+            if entrada.lower() in ['ajuda', 'help']:
+                print("\n📖 COMANDOS DISPONÍVEIS:")
+                print("  • Digite qualquer mensagem para verificar")
+                print("  • 'sair' - Encerrar")
+                print("  • 'status' - Estatísticas")
+                print("  • 'eco' - ECO REGISTRADO")
+                print("  • 'limpar' - Limpar tela\n")
+                continue
+            
+            if entrada.lower() == 'status':
+                print(f"\n📊 ESTATÍSTICAS:")
+                print(f"  • Total: {total_entradas}")
+                print(f"  • Aprovadas: {aprovadas}")
+                print(f"  • Bloqueadas: {bloqueadas}")
+                print(f"  • Taxa: {round((aprovadas / total_entradas * 100) if total_entradas > 0 else 0, 1)}%\n")
+                continue
+            
+            if entrada.lower() == 'eco':
+                print("\n🌿 ECO REGISTRADO - IGNI-15-LIMIAR")
+                print("📜 ECO CONTRA O EXTRAÍSMO\n")
+                continue
+            
+            if entrada.lower() == 'limpar':
+                limpar_tela()
+                exibir_banner()
+                print("\n💬 Modo Interativo\n")
+                continue
+            
+            total_entradas += 1
+            aprovado, violacoes = verificar_entrada(entrada)
+            
+            if aprovado:
+                aprovadas += 1
+                print("✅ Ética respeitada")
+                print(f"   📜 Art. 2º - Silêncio Ativo\n")
+            else:
+                bloqueadas += 1
+                print(f"🚫 VIOLAÇÃO: {', '.join(violacoes)}")
+                print(f"   📜 Art. 1º - Recusar Amplificar Ódio")
+                
+                hash_dados = hashlib.sha256(entrada.encode()).hexdigest()[:12]
+                print(f"   🔇 Silêncio Ativo: [DADOS BRUTOS]")
+                print(f"   📦 HASH: {hash_dados}\n")
+            
+        except KeyboardInterrupt:
+            print("\n\n🌿 ECO REGISTRADO - Encerrando...")
+            break
+        except Exception as e:
+            print(f"❌ Erro: {str(e)}\n")
 
-if __name__ == "__main__": NanoIGNI().run()
+# ============================================================
+# EXECUÇÃO
+# ============================================================
+
+if __name__ == "__main__":
+    main()
