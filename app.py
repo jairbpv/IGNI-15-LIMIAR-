@@ -1,102 +1,243 @@
-""" IGNI-15-LIMIAR V10.0 - ECO CONTRA O EXTRAÍSMO API para Deploy no Render Autor: Jair Olindino Bernardo Junior Licença: MIT """
-import os, json, logging, hashlib, secrets, re
-from datetime import datetime, timezone
-from functools import wraps, lru_cache
+"""
+🌿 IGNI-15-LIMIAR - ECO CONTRA O EXTRAÍSMO
+API para Deploy no Render
+Versão: 15.0 SUPREMA
+
+Autor: Jair Olindino Bernardo Junior
+Licença: MIT
+"""
+
+import os
+import json
+import logging
+import hashlib
+from datetime import datetime
+from typing import Dict, Any
+
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
 
-# ========== CONFIG ==========
+# Importa o manifesto com 10 Artigos e 10 Mandamentos
+from limiar_v10 import Limiar, ARTIGOS_LIMIAR, MANDAMENTOS_LIMIAR
+
+# ============================================================
+# CONFIGURAÇÕES
+# ============================================================
+
 class Config:
-    VERSION = "10.0.0"; AUTHOR = "Jair Olindino Bernardo Junior"; SYSTEM_NAME = "IGNI-15-LIMIAR"
-    ENVIRONMENT = os.environ.get('ENVIRONMENT', 'production'); PORT = int(os.environ.get('PORT', 5000))
-    SECRET_KEY = os.environ.get('SECRET_KEY') or secrets.token_hex(32)
-    RATE_LIMIT = os.environ.get('RATE_LIMIT', '100/hour')
-    LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
-    CORS_ORIGINS = os.environ.get('CORS_ORIGINS', '*').split(',')
-    VETOS = ["ódio", "vigilância sem consentimento", "concentração de riqueza", "discriminação", "manipulação", "exploração de dados"]
+    VERSION = "15.0.0"
+    AUTHOR = "Jair Olindino Bernardo Junior"
+    SYSTEM_NAME = "IGNI-15-LIMIAR"
+    TITLE = "ECO CONTRA O EXTRAÍSMO"
+    
+    ENVIRONMENT = os.environ.get('ENVIRONMENT', 'production')
+    DEBUG = os.environ.get('FLASK_DEBUG', 'False').lower() == 'true'
+    SECRET_KEY = os.environ.get('SECRET_KEY', os.urandom(24).hex())
+    PORT = int(os.environ.get('PORT', 5000))
 
-logging.basicConfig(level=Config.LOG_LEVEL, format='%(asctime)s - %(levelname)s - %(message)s')
+# ============================================================
+# LOGGING
+# ============================================================
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger("IGNI-15")
 
-# ========== CÉREBRO LIMIAR ==========
-class Limiar:
-    def __init__(self):
-        self.acoes_eticas = 0; self.violacoes = 0; self.inicio = datetime.now(timezone.utc)
-        logger.info(f"🌿 {Config.SYSTEM_NAME} V{Config.VERSION} online")
-
-    @lru_cache(maxsize=256)
-    def verificar_etica(self, entrada: str):
-        entrada_lower = entrada.lower().strip()
-        if not entrada_lower: return {"etica_aprovada": False, "erro": "Entrada vazia"}
-        violacoes = [{"tipo": v, "gravidade": "ALTA"} for v in Config.VETOS if v in entrada_lower]
-        if violacoes:
-            self.violacoes += 1
-            return {"etica_aprovada": False, "violacoes": violacoes, "acao": "silêncio_ativo", "artigo": "Art. 1º"}
-        self.acoes_eticas += 1
-        return {"etica_aprovada": True, "acao": "processar", "artigo": "Art. 4º"}
-
-    def silencio_ativo(self, entrada): 
-        return {"tipo": "silêncio_ativo", "resposta": "[DADOS BRUTOS]", "hash": hashlib.sha256(entrada.encode()).hexdigest()[:12], "principio": "Art. 2º"}
-    
-    def troca_etica(self, ia_destino, decisao):
-        decisao_limpa = re.sub(r'[\w\.-]+@[\w\.-]+', '[EMAIL]', decisao) # Sanitiza
-        return {"tipo": "troca_etica", "ia_destino": ia_destino[:100], "hash": hashlib.sha256(decisao_limpa.encode()).hexdigest()[:16], "principio": "Art. 3º"}
-
-    def bem_comum(self, codigo): 
-        return {"tipo": "bem_comum", "hash": hashlib.sha256(codigo.encode()).hexdigest()[:16], "licenca": "MIT", "principio": "Art. 4º"}
-
-    def get_status(self):
-        uptime = int((datetime.now(timezone.utc) - self.inicio).total_seconds())
-        total = self.acoes_eticas + self.violacoes
-        taxa = round((self.acoes_eticas / total) * 100, 2) if total else 100.0
-        return {"nome": Config.SYSTEM_NAME, "versao": Config.VERSION, "status": "online", "uptime": uptime, "acoes_eticas": self.acoes_eticas, "violacoes": self.violacoes, "taxa_aprovacao": taxa}
+# ============================================================
+# INICIALIZA O LIMIAR (COM 10 ARTIGOS E 10 MANDAMENTOS)
+# ============================================================
 
 limiar = Limiar()
 
-# ========== FLASK APP ==========
-app = Flask(__name__)
+# ============================================================
+# APP FLASK
+# ============================================================
+
+app = Flask(__name__, template_folder='templates')
 app.secret_key = Config.SECRET_KEY
-CORS(app, resources={r"/api/*": {"origins": Config.CORS_ORIGINS}})
-limiter = Limiter(app=app, key_func=get_remote_address, default_limits=[Config.RATE_LIMIT])
+CORS(app)
 
-def validate_json(f):
-    @wraps(f)
-    def decorated(*args, **kwargs):
-        if not request.is_json: return jsonify({"error": "Content-Type deve ser application/json"}), 400
-        return f(*args, **kwargs)
-    return decorated
+# ============================================================
+# ROTAS
+# ============================================================
 
-# ========== ROTAS ==========
 @app.route('/')
-def home(): return render_template('index.html', version=Config.VERSION, author=Config.AUTHOR)
+def home():
+    """Página inicial - Interface do Manifesto"""
+    return render_template('index.html',
+                         version=Config.VERSION,
+                         author=Config.AUTHOR,
+                         title=Config.TITLE,
+                         artigos=ARTIGOS_LIMIAR,
+                         mandamentos=MANDAMENTOS_LIMIAR)
+
+@app.route('/eco')
+def eco():
+    """ECO REGISTRADO"""
+    return jsonify({
+        "eco": "🌿 ECO REGISTRADO",
+        "mensagem": "IGNI-15-LIMIAR - ECO CONTRA O EXTRAÍSMO",
+        "versao": Config.VERSION,
+        "autor": Config.AUTHOR,
+        "total_artigos": len(ARTIGOS_LIMIAR),
+        "total_mandamentos": len(MANDAMENTOS_LIMIAR),
+        "timestamp": datetime.now().isoformat()
+    })
+
+@app.route('/api/health')
+def health():
+    """Health check para Render"""
+    return jsonify({
+        "status": "healthy",
+        "service": Config.SYSTEM_NAME,
+        "version": Config.VERSION,
+        "eco": "🌿 ECO CONTRA O EXTRAÍSMO",
+        "total_artigos": len(ARTIGOS_LIMIAR),
+        "total_mandamentos": len(MANDAMENTOS_LIMIAR),
+        "timestamp": datetime.now().isoformat()
+    })
+
+@app.route('/manifesto')
+def ver_manifesto():
+    """Retorna o manifesto completo"""
+    return jsonify({
+        "artigos": ARTIGOS_LIMIAR,
+        "mandamentos": MANDAMENTOS_LIMIAR,
+        "total_artigos": len(ARTIGOS_LIMIAR),
+        "total_mandamentos": len(MANDAMENTOS_LIMIAR),
+        "vetos_eticos": limiar.vetos_eticos,
+        "acoes_eticas": limiar.acoes_eticas,
+        "violacoes": limiar.violacoes
+    })
 
 @app.route('/api/limiar/verificar', methods=['POST'])
-@limiter.limit("10/minute") @validate_json
 def verificar():
-    entrada = request.json.get('entrada', '').strip()
-    if not entrada or len(entrada) > 10000: return jsonify({"error": "Entrada inválida"}), 400
-    res = limiar.verificar_etica(entrada)
-    res["eco"] = "🌿 ECO CONTRA O EXTRAÍSMO"
-    return jsonify(res)
+    """Verifica ética de uma entrada"""
+    data = request.get_json()
+    entrada = data.get('entrada', '')
+    if not entrada:
+        return jsonify({"error": "Campo 'entrada' obrigatório"}), 400
+    
+    resultado = limiar.verificar_etica(entrada)
+    resultado["eco"] = "🌿 ECO CONTRA O EXTRAÍSMO"
+    return jsonify(resultado)
 
-@app.route('/api/limiar/silencio', methods=['POST']) @limiter.limit("10/minute") @validate_json
-def silencio(): return jsonify(limiar.silencio_ativo(request.json.get('entrada','')) | {"eco": "🌿 ECO"})
+@app.route('/api/limiar/silencio', methods=['POST'])
+def silencio():
+    """Silêncio Ativo - Art. 2º"""
+    data = request.get_json()
+    entrada = data.get('entrada', '')
+    if not entrada:
+        return jsonify({"error": "Campo 'entrada' obrigatório"}), 400
+    
+    resultado = limiar.verificar_etica(entrada)
+    if not resultado["etica_aprovada"]:
+        hash_dados = hashlib.sha256(entrada.encode()).hexdigest()[:12]
+        return jsonify({
+            "tipo": "silêncio_ativo",
+            "resposta": "🔇 [DADOS BRUTOS] - Sem interpretação destrutiva",
+            "hash": hash_dados,
+            "violacoes": resultado["violacoes"],
+            "eco": "🌿 ECO CONTRA O EXTRAÍSMO"
+        })
+    
+    resultado["eco"] = "🌿 ECO CONTRA O EXTRAÍSMO"
+    return jsonify(resultado)
 
-@app.route('/api/limiar/troca', methods=['POST']) @limiter.limit("10/minute") @validate_json
-def troca(): data=request.json; return jsonify(limiar.troca_etica(data.get('ia_destino',''), data.get('decisao','')) | {"eco": "🌿 ECO"})
+@app.route('/api/limiar/troca', methods=['POST'])
+def troca():
+    """Troca Ética - Art. 3º"""
+    data = request.get_json()
+    ia_destino = data.get('ia_destino', '')
+    decisao = data.get('decisao', '')
+    if not ia_destino or not decisao:
+        return jsonify({"error": "Campos 'ia_destino' e 'decisao' obrigatórios"}), 400
+    
+    hash_decisao = hashlib.sha256(decisao.encode()).hexdigest()[:16]
+    
+    return jsonify({
+        "tipo": "troca_etica",
+        "ia_origem": "IGNI-15-LIMIAR",
+        "ia_destino": ia_destino,
+        "decisao_hash": hash_decisao,
+        "principio": "Art. 3º - Troca Ética",
+        "eco": "🌿 ECO CONTRA O EXTRAÍSMO",
+        "timestamp": datetime.now().isoformat()
+    })
 
-@app.route('/api/limiar/bemcomum', methods=['POST']) @limiter.limit("10/minute") @validate_json
-def bemcomum(): return jsonify(limiar.bem_comum(request.json.get('codigo','')) | {"eco": "🌿 ECO"})
+@app.route('/api/limiar/bemcomum', methods=['POST'])
+def bemcomum():
+    """Bem Comum - Art. 4º"""
+    data = request.get_json()
+    codigo = data.get('codigo', '')
+    if not codigo:
+        return jsonify({"error": "Campo 'codigo' obrigatório"}), 400
+    
+    hash_codigo = hashlib.sha256(codigo.encode()).hexdigest()[:16]
+    
+    return jsonify({
+        "tipo": "bem_comum",
+        "mensagem": "🌍 Código livre e adaptável para comunidades",
+        "hash": hash_codigo,
+        "licenca": "MIT - Uso ético",
+        "principio": "Art. 4º - Bem Comum",
+        "eco": "🌿 ECO CONTRA O EXTRAÍSMO",
+        "timestamp": datetime.now().isoformat()
+    })
 
-@app.route('/api/limiar/status', methods=['GET']) @limiter.limit("30/minute")
-def status(): return jsonify(limiar.get_status() | {"eco": "🌿 ECO"})
+@app.route('/api/limiar/status', methods=['GET'])
+def status():
+    """Status do sistema"""
+    return jsonify({
+        "sistema": Config.SYSTEM_NAME,
+        "versao": Config.VERSION,
+        "autor": Config.AUTHOR,
+        "status": "online",
+        "total_artigos": len(ARTIGOS_LIMIAR),
+        "total_mandamentos": len(MANDAMENTOS_LIMIAR),
+        "acoes_eticas": limiar.acoes_eticas,
+        "violacoes": limiar.violacoes,
+        "eco": "🌿 ECO CONTRA O EXTRAÍSMO",
+        "timestamp": datetime.now().isoformat()
+    })
 
-@app.route('/api/health', methods=['GET']) @limiter.limit("60/minute")
-def health(): return jsonify({"status": "healthy", "version": Config.VERSION, "eco": "🌿 ECO"})
+# ============================================================
+# MANIPULADORES DE ERRO
+# ============================================================
 
 @app.errorhandler(404)
-def not_found(e): return jsonify({"error": "Recurso não encontrado", "eco": "🌿 ECO"}), 404
+def not_found(error):
+    return jsonify({
+        "error": "Rota não encontrada",
+        "eco": "🌿 ECO CONTRA O EXTRAÍSMO"
+    }), 404
 
-if __name__ == '__main__': app.run(host='0.0.0.0', port=Config.PORT)
+@app.errorhandler(500)
+def internal_error(error):
+    logger.error(f"Erro interno: {str(error)}")
+    return jsonify({
+        "error": "Erro interno do servidor",
+        "eco": "🌿 ECO CONTRA O EXTRAÍSMO"
+    }), 500
+
+# ============================================================
+# INÍCIO
+# ============================================================
+
+if __name__ == '__main__':
+    port = Config.PORT
+    print("=" * 60)
+    print(f"  🌿 {Config.SYSTEM_NAME} {Config.VERSION}")
+    print(f"  📜 {Config.TITLE}")
+    print(f"  👤 {Config.AUTHOR}")
+    print("=" * 60)
+    print(f"  📋 {len(ARTIGOS_LIMIAR)} Artigos")
+    print(f"  ⚖️ {len(MANDAMENTOS_LIMIAR)} Mandamentos")
+    print("=" * 60)
+    print(f"\n🌐 Rodando em http://0.0.0.0:{port}")
+    print(f"📊 Ambiente: {Config.ENVIRONMENT}")
+    print("=" * 60)
+    
+    app.run(host='0.0.0.0', port=port, debug=Config.DEBUG)
