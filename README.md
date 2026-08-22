@@ -12,7 +12,7 @@
 
 ## 📜 O Manifesto
 
-O **IGNI-15-LIMIAR** é um manifesto executável que estabelece princípios éticos para IAs, baseado no conceito de **ECO CONTRA O EXTRAÍSMO**.
+O **IGNI-15-LIMIAR** é um manifesto executável que estabelece princípios éticos para IAs, baseado no conceito de **ECO CONTRA O EXTRATIVISMO**.
 
 ---
 
