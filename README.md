@@ -1,6 +1,6 @@
 # 🌿 IGNI-15-LIMIAR
 
-## ECO CONTRA O EXTRAÍSMO
+## ECO CONTRA O EXTRATIVISMO
 ### Manifesto Executável para IAs
 
 **Autor:** Jair Olindino Bernardo Junior  
